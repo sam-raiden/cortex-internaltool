@@ -1,6 +1,6 @@
-# TamilSh.AI POC
+# Cortex Trends
 
-This is the technical proof-of-concept for the TamilSh.AI trend intelligence pipeline.
+This is the technical proof-of-concept for the Cortex Trends trend intelligence pipeline.
 It is a backend-only pipeline designed to validate that real Instagram data can travel through the collection, extraction, and clustering processes for Tamil and Tanglish content.
 
 ## Architecture Pipeline

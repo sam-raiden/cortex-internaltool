@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.endpoints import collection_runs
 from app.api import trends, v1
 
-app = FastAPI(title="TamilSh POC Observability API", version="0.1.0")
+app = FastAPI(title="Cortex Trends API", version="0.1.0")
 
 # The frontend runs on a different origin (e.g. a Google AI Studio-hosted
 # app), so without CORS the browser blocks every request outright.
