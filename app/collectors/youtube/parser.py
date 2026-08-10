@@ -91,17 +91,39 @@ class YouTubeShortsParser:
         """Per-source classification only, not a circuit breaker -- YouTube
         has no login wall for public pages, so unlike Instagram there is
         nothing analogous to a batch-aborting critical-events list. A
-        blocked/unavailable channel just fails that one collect() call."""
+        blocked/unavailable channel just fails that one collect() call.
+
+        Deliberately does NOT substring-match raw page_text (page.content())
+        against phrases like "video unavailable" or "recaptcha" -- verified
+        live against a real, working channel page and both produced false
+        positives: YouTube ships a full i18n string table on every page
+        (e.g. `"DOWNLOAD_UNPLAYABLE":"Video unavailable offline"`) and a
+        `RECAPTCHA_V3_SITEKEY` config value that's present defensively on
+        every page, not just when a challenge is active. Only signals
+        confirmed against real pages are checked here. A genuinely blocked
+        channel that doesn't match any of these just yields 0 discovered
+        Shorts and a plain SUCCESS -- honest and non-fabricated, if less
+        specific than a dedicated error_type would be.
+        """
         url = page.url
-        page_text = page.content().lower()
+        title = (page.title() or "")
 
         if "consent.youtube.com" in url:
             return "consent_wall"
-        if "this channel does not exist" in page_text or "channel not found" in page_text:
+        # Confirmed live: a genuinely nonexistent channel returns a real
+        # HTTP-level 404 response with this exact title, not YouTube's SPA
+        # shell.
+        if "404 Not Found" in title:
             return "channel_not_found"
-        if "this video is unavailable" in page_text or "video unavailable" in page_text:
-            return "video_unavailable"
-        if "unusual traffic" in page_text or "recaptcha" in page_text:
+
+        try:
+            body_text = page.locator("body").inner_text().lower()
+        except Exception:
+            body_text = ""
+        # Longer, specific phrase (Google's actual anti-bot interstitial
+        # copy) rather than the two-word "unusual traffic"/"recaptcha",
+        # which risk the same kind of boilerplate false positive seen above.
+        if "our systems have detected unusual traffic" in body_text:
             return "captcha_challenge"
 
         return None

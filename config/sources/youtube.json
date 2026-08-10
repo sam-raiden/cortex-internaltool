@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "external_id": "sunnewstamil",
+    "url": "https://www.youtube.com/@Sunnewstamil/shorts",
+    "name": "Sun News",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "behindwoodstv",
+    "url": "https://www.youtube.com/@Behindwoodstv/shorts",
+    "name": "Behindwoods TV",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "puthiyathalaimurai_yt",
+    "url": "https://www.youtube.com/@PuthiyaThalaimuraiTV/shorts",
+    "name": "Puthiya Thalaimurai TV",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "polimernews_yt",
+    "url": "https://www.youtube.com/@PolimerNews/shorts",
+    "name": "Polimer News",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "hellodoctortamil",
+    "url": "https://www.youtube.com/@hellodoctortamil/shorts",
+    "name": "Hello Doctor Tamil",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "drpalpriya",
+    "url": "https://www.youtube.com/@PriyaPal_Vibes/shorts",
+    "name": "Dr Pal & Priya (Tamil)",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  }
+]
