@@ -145,7 +145,15 @@ def build_evidence(db: Session, trend: Trend) -> dict:
 
 
 def evidence_hash(evidence: dict, model: str, prompt_version: str) -> str:
-    canonical = json.dumps(evidence, sort_keys=True, default=str)
+    """Hashes only the CONTENT the LLM actually interprets (representative
+    texts/hashtags/accounts/platforms/languages) -- deliberately excludes
+    `deterministic_context`, which carries per-trend bookkeeping (label,
+    scores) that's unique to whichever cluster/run it came from almost by
+    construction. Two different trends with byte-identical representative
+    content must hash the same so the cache actually caches; including the
+    trend-specific label would defeat that entirely."""
+    hashable = {k: v for k, v in evidence.items() if k != "deterministic_context"}
+    canonical = json.dumps(hashable, sort_keys=True, default=str)
     payload = f"{model}::{prompt_version}::{canonical}"
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 

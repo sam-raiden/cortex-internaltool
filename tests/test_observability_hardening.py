@@ -4,7 +4,7 @@ import datetime
 from fastapi.testclient import TestClient
 
 from app.services.collection_run import CollectionRunService
-from app.collectors.instagram.models import CollectionBatchResult, CollectionResult
+from app.collectors.base import CollectionBatchResult, CollectionResult
 from app.models.schema import CollectionRun, CollectionPageResult, InstagramPage, CollectionError
 from app.main import app
 
@@ -29,19 +29,19 @@ def test_status_classifications(db_session):
     run_id = f"test_{uuid.uuid4().hex[:8]}"
     
     # 1. BLOCKED
-    batch_blocked = CollectionBatchResult(status="BLOCKED")
+    batch_blocked = CollectionBatchResult(platform="instagram", status="BLOCKED")
     run_db = CollectionRunService.start_run(db_session, run_id+"_blocked")
     CollectionRunService.complete_run(db_session, run_db.id, batch_blocked)
     assert run_db.status == "BLOCKED"
-    
+
     # 2. DEGRADED
-    batch_deg = CollectionBatchResult(status="DEGRADED", pages_successful=1)
+    batch_deg = CollectionBatchResult(platform="instagram", status="DEGRADED", pages_successful=1)
     run_db = CollectionRunService.start_run(db_session, run_id+"_deg")
     CollectionRunService.complete_run(db_session, run_db.id, batch_deg)
     assert run_db.status == "DEGRADED"
 
     # 3. FAILED
-    batch_fail = CollectionBatchResult(status="FAILED", pages_attempted=0)
+    batch_fail = CollectionBatchResult(platform="instagram", status="FAILED", pages_attempted=0)
     run_db = CollectionRunService.start_run(db_session, run_id+"_fail")
     CollectionRunService.complete_run(db_session, run_db.id, batch_fail)
     assert run_db.status == "FAILED"
@@ -49,32 +49,31 @@ def test_status_classifications(db_session):
 def test_aggregation_and_page_level(db_session):
     run_id = f"test_{uuid.uuid4().hex[:8]}"
     run_db = CollectionRunService.start_run(db_session, run_id)
-    
+
     # Mocking standard page result
-    res1 = CollectionResult(page_username="harden_test", success=True, posts_discovered=57, new_posts=48, existing_posts=9)
-    res2 = CollectionResult(page_username="harden_test2", success=False, error_type="timeout", error_message="Took too long")
-    
+    res1 = CollectionResult(platform="instagram", status="SUCCESS", items_discovered=57, items_created=48, items_skipped=9)
+    res2 = CollectionResult(platform="instagram", status="FAILED", error_type="timeout", error_message="Took too long")
+
     pr1 = CollectionRunService.log_page_result(db_session, run_db.id, "harden_test", res1)
     pr2 = CollectionRunService.log_page_result(db_session, run_db.id, "harden_test2", res2)
-    
+
     assert pr1.status == "SUCCESS"
     assert pr1.new_posts == 48
-    
+
     assert pr2.status == "FAILED"
     assert pr2.error_type == "timeout"
 
-    batch = CollectionBatchResult()
+    batch = CollectionBatchResult(platform="instagram")
     batch.pages_attempted = 19
     batch.pages_successful = 19
     batch.pages_failed = 0
-    batch.posts_discovered = 57
-    batch.posts_with_stable_ids = 57
-    batch.new_posts = 48
-    batch.existing_posts = 9
+    batch.items_discovered = 57
+    batch.items_created = 48
+    batch.items_skipped = 9
     batch.status = "SUCCESS"
-    
+
     CollectionRunService.complete_run(db_session, run_db.id, batch)
-    
+
     run_verify = db_session.query(CollectionRun).filter_by(id=run_db.id).first()
     assert run_verify.posts_discovered == 57
     assert run_verify.new_posts == 48
@@ -84,8 +83,8 @@ def test_aggregation_and_page_level(db_session):
 def test_error_persistence_and_classification(db_session):
     run_id = f"test_{uuid.uuid4().hex[:8]}"
     run_db = CollectionRunService.start_run(db_session, run_id)
-    
-    res_err = CollectionResult(page_username="harden_test", success=False, error_type="login_required", error_message="Hit login wall")
+
+    res_err = CollectionResult(platform="instagram", status="FAILED", error_type="login_required", error_message="Hit login wall")
     CollectionRunService.log_page_result(db_session, run_db.id, "harden_test", res_err)
     
     err_verify = db_session.query(CollectionError).filter_by(run_id=run_db.id).first()
@@ -110,21 +109,21 @@ def test_circuit_breaker():
     from app.collectors.instagram.collector import InstagramCollector
     collector = InstagramCollector()
     
-    batch = CollectionBatchResult()
+    batch = CollectionBatchResult(platform="instagram")
     batch.pages_successful = 0
-    
-    res = CollectionResult(page_username="dummy", success=False, error_type="challenge_detected")
-    
+
+    res = CollectionResult(platform="instagram", status="FAILED", error_type="challenge_detected")
+
     critical_events = ["login_required", "login_wall_overlay", "access_denied", "rate_limited", "challenge_detected"]
     if res.error_type in critical_events:
         batch.status = "BLOCKED" if batch.pages_successful == 0 else "DEGRADED"
-        
+
     assert batch.status == "BLOCKED"
-    
+
     # Test non-critical event like NO_POSTS_FOUND
-    batch_safe = CollectionBatchResult()
+    batch_safe = CollectionBatchResult(platform="instagram")
     batch_safe.pages_successful = 1
-    res_safe = CollectionResult(page_username="dummy", success=False, error_type="no_posts_found")
+    res_safe = CollectionResult(platform="instagram", status="FAILED", error_type="no_posts_found")
     if res_safe.error_type in critical_events:
          batch_safe.status = "DEGRADED"
     else:

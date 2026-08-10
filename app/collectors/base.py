@@ -48,6 +48,7 @@ class CollectionBatchResult(BaseModel):
     errors: List[Dict] = Field(default_factory=list)
     session_state_valid: bool = True
     session_metadata: Dict = Field(default_factory=dict)
+    metadata: Dict = Field(default_factory=dict)
 
 class BaseCollector:
     """

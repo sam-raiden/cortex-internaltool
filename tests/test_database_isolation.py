@@ -43,7 +43,7 @@ def test_development_database_unchanged():
     dev_url = "postgresql://tamilsh:pocpassword@localhost:5433/tamilsh_poc"
     eng = create_engine(dev_url)
     with eng.connect() as conn:
-        res = conn.execute(text("SELECT count(*) FROM instagram_pages WHERE username = 'cleanup_test_user'")).scalar()
+        res = conn.execute(text("SELECT count(*) FROM sources WHERE external_id = 'cleanup_test_user'")).scalar()
         assert res == 0
 
 def test_no_database_url_fallback():
@@ -52,7 +52,7 @@ def test_no_database_url_fallback():
 def test_schema_matches_development(db_session):
     res = db_session.execute(text("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")).fetchall()
     tables = [r[0] for r in res]
-    assert "instagram_posts" in tables
+    assert "raw_contents" in tables
     assert "content_sources" in tables
 
 def test_pgvector_available(db_session):

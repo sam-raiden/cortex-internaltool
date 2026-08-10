@@ -23,10 +23,11 @@ VALID_LLM_OUTPUT = {
 }
 
 
-def _seed_trend(db_session, suffix: str, text: str = "Seed evidence text") -> Trend:
-    source = Source(username=f"llm_seed_src_{suffix}", profile_url="http://seed", vertical="GENERAL")
-    db_session.add(source)
-    db_session.flush()
+def _seed_trend(db_session, suffix: str, text: str = "Seed evidence text", source: Source = None) -> Trend:
+    if source is None:
+        source = Source(username=f"llm_seed_src_{suffix}", profile_url="http://seed", vertical="GENERAL")
+        db_session.add(source)
+        db_session.flush()
 
     post = RawContent(source_id=source.id, external_content_id=f"llm_seed_post_{suffix}", url="http://seed/post", platform="rss", vertical="GENERAL")
     db_session.add(post)
@@ -97,8 +98,15 @@ def test_enrich_trend_cache_miss_calls_llm_and_persists_success(db_session):
 
 
 def test_enrich_trend_cache_hit_does_not_call_llm_again(db_session):
-    trend_a = _seed_trend(db_session, "cache_a", text="Identical evidence text for cache test")
-    trend_b = _seed_trend(db_session, "cache_b", text="Identical evidence text for cache test")
+    # Same source/account so the two trends' evidence is byte-identical, not just
+    # same text -- accounts are real evidence content, not bookkeeping, so a
+    # different account legitimately means a different cache key.
+    shared_source = Source(username="llm_seed_src_shared_cache", profile_url="http://seed", vertical="GENERAL")
+    db_session.add(shared_source)
+    db_session.flush()
+
+    trend_a = _seed_trend(db_session, "cache_a", text="Identical evidence text for cache test", source=shared_source)
+    trend_b = _seed_trend(db_session, "cache_b", text="Identical evidence text for cache test", source=shared_source)
 
     client_a = _mock_client()
     row_a = enrich_trend(db_session, trend_a, client=client_a)
