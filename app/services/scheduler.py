@@ -18,15 +18,30 @@ fail-closed default would silently drop those sources to zero collection
 the moment this feature ships -- a worse regression than over-collecting.
 """
 import argparse
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.schema import Source
 from app.storage.database import SessionLocal
 
-DAYPARTS = ("morning", "midday", "evening")
+DAYPARTS = ("morning", "afternoon", "evening")
 CADENCES = {"daily": 1, "twice_daily": 2}
+
+
+def get_current_daypart(now: Optional[datetime] = None) -> str:
+    """Maps a timestamp to one of DAYPARTS. Boundaries: 00:00-11:59 morning,
+    12:00-16:59 afternoon, 17:00-23:59 evening. UTC by default, matching the
+    timestamp convention used throughout trend_intelligence.py. Matches the
+    real frontend contract's daypart vocabulary (confirmed against the
+    actual api-contract.ts, not guessed)."""
+    now = now or datetime.utcnow()
+    if now.hour < 12:
+        return "morning"
+    if now.hour < 17:
+        return "afternoon"
+    return "evening"
 
 
 def set_schedule(db: Session, source_id: int, cadence: str, dayparts: List[str]) -> Source:

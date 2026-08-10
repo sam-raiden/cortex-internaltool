@@ -28,11 +28,13 @@ from app.storage.database import SessionLocal
 logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "qwen3:8b"
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"  # v2: category taxonomy corrected to match the real frontend contract's
+                        # TrendCategory enum (src/types.ts) -- v1 used an invented taxonomy that
+                        # doesn't match. Bumping the version deliberately invalidates old cache
+                        # entries so no cached v1-taxonomy result is ever served under v2's schema.
 
 CATEGORIES = [
-    "POLITICS", "CINEMA", "SPORTS", "MEDICAL_HEALTH", "BUSINESS",
-    "TECHNOLOGY", "ENTERTAINMENT", "SOCIAL", "GENERAL",
+    "politics", "cinema", "memes", "sports", "local_news", "culture", "viral", "medical",
 ]
 
 SYSTEM_PROMPT = (

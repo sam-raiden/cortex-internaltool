@@ -70,7 +70,7 @@ def get_run_pages(run_id: str, db: Session = Depends(get_db)):
     pages = CollectionRunService.get_run_page_results(db, run.id)
     return [
         {
-            "page_id": p.page_id,
+            "page_id": p.source_id,
             "status": p.status,
             "duration_ms": p.duration_ms,
             "posts_discovered": p.posts_discovered,
@@ -91,7 +91,7 @@ def get_run_errors(run_id: str, db: Session = Depends(get_db)):
     
     return [
         {
-             "page_id": e.page_id,
+             "page_id": e.source_id,
              "error_type": e.error_type,
              "error_message": e.error_message
         } for e in errors

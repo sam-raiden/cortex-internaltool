@@ -199,7 +199,7 @@ def test_get_sources_due_respects_daily_cadence(db_session):
 
     assert s.external_id in [d.external_id for d in get_sources_due(db_session, "rss", "morning")]
     assert s.external_id not in [d.external_id for d in get_sources_due(db_session, "rss", "evening")]
-    assert s.external_id not in [d.external_id for d in get_sources_due(db_session, "rss", "midday")]
+    assert s.external_id not in [d.external_id for d in get_sources_due(db_session, "rss", "afternoon")]
 
 
 def test_get_sources_due_respects_twice_daily_cadence(db_session):
@@ -211,7 +211,7 @@ def test_get_sources_due_respects_twice_daily_cadence(db_session):
 
     assert s.external_id in [d.external_id for d in get_sources_due(db_session, "rss", "morning")]
     assert s.external_id in [d.external_id for d in get_sources_due(db_session, "rss", "evening")]
-    assert s.external_id not in [d.external_id for d in get_sources_due(db_session, "rss", "midday")]
+    assert s.external_id not in [d.external_id for d in get_sources_due(db_session, "rss", "afternoon")]
 
 
 def test_get_sources_due_excludes_disabled_sources(db_session):

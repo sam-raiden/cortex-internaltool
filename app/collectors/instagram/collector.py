@@ -140,6 +140,7 @@ class InstagramCollector:
                         logger.info(f"New post {post_id} found. Saving.")
                         new_post = InstagramPost(
                             page_id=db_page.id,
+                            vertical=db_page.vertical,
                             instagram_post_id=post_id,
                             post_url=link,
                             caption=metadata.get("caption"),

@@ -14,7 +14,7 @@ VALID_LLM_OUTPUT = {
     "title": "Test Title",
     "english_title": "Test Title EN",
     "tamil_title": "Test Title TA",
-    "category": "GENERAL",
+    "category": "local_news",
     "hashtags": ["test", "topic"],
     "micro_insight": "A short insight.",
     "summary": "A one-paragraph summary.",
@@ -92,7 +92,7 @@ def test_enrich_trend_cache_miss_calls_llm_and_persists_success(db_session):
     assert client.generate_json.call_count == 1
     assert row.status == "SUCCESS"
     assert row.title == "Test Title"
-    assert row.category == "GENERAL"
+    assert row.category == "local_news"
     assert row.evidence_hash
 
 

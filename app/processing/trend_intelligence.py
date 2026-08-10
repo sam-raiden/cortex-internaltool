@@ -10,6 +10,7 @@ from app.storage.database import SessionLocal
 from app.models.schema import InstagramPost, ContentSource, ProcessedSignal
 from app.models.schema import ClusterRun, Cluster, ClusterMember
 from app.models.schema import TrendRun, Trend, TrendRepresentative
+from app.services.scheduler import get_current_daypart
 
 def create_deterministic_label(texts, existing_label):
     if existing_label and "unknown" not in existing_label.lower():
@@ -17,25 +18,43 @@ def create_deterministic_label(texts, existing_label):
     return "Unclassified Trend Cluster"
 
 
-def run_trend_intelligence():
-    db = SessionLocal()
-    url = os.getenv("DATABASE_URL")
-    if not url or "tamilsh_poc_test" in url:
-        print("FAIL: test DB detected.")
-        return
-        
+def run_trend_intelligence(db: Session = None, write_json: bool = True):
+    """When db is None (the standalone script entrypoint), behavior is
+    unchanged: owns its own session, refuses to run against a DB whose URL
+    contains tamilsh_poc_test, writes the JSON report file, closes its
+    session. When a caller supplies db (API/test path), the test-DB guard
+    and db.close() are both skipped -- the guard exists to stop the
+    standalone script from touching whichever DB the environment happens to
+    point at when run manually; a caller-supplied session already went
+    through its own lifecycle management (e.g. FastAPI's Depends(get_db))
+    and this function must not close it out from under that caller."""
+    owns_session = db is None
+    if owns_session:
+        db = SessionLocal()
+        url = os.getenv("DATABASE_URL")
+        if not url or "tamilsh_poc_test" in url:
+            print("FAIL: test DB detected.")
+            return None
+
     print("PHASE 2 - READ EXISTING CLUSTER DATA")
     recent_cluster_run = db.query(ClusterRun).order_by(ClusterRun.id.desc()).first()
     if not recent_cluster_run:
         print("No cluster run discovered.")
-        return
+        return None
         
     clusters = db.query(Cluster).filter(Cluster.run_id == recent_cluster_run.id).all()
     
     # Audit corpus
     total_signals = db.query(ProcessedSignal).count()
-    eligible_signals = sum(1 for s in db.query(ProcessedSignal).all() if s.canonical_text and s.signal_quality != "INSUFFICIENT" and s.embedding is not None and len(s.embedding) == 384)
-    
+    eligible_signals = 0
+    corpus_platforms = set()
+    for s in db.query(ProcessedSignal).all():
+        if s.canonical_text and s.signal_quality != "INSUFFICIENT" and s.embedding is not None and len(s.embedding) == 384:
+            eligible_signals += 1
+            if s.post and s.post.platform:
+                corpus_platforms.add(s.post.platform)
+    total_platforms_in_corpus = len(corpus_platforms) or 1
+
     clustered_ids = set()
     for c in clusters:
         for m in c.members:
@@ -52,7 +71,7 @@ def run_trend_intelligence():
         "cluster_size": "AVAILABLE",
         "embedding_cohesion": "AVAILABLE",
         "source_diversity": "AVAILABLE",
-        "platform_diversity": "PARTIAL", # Currently only Instagram
+        "platform_diversity": "AVAILABLE",
         "published_timestamp": "UNAVAILABLE", 
         "recency": "UNAVAILABLE",
         "engagement": "UNAVAILABLE",
@@ -73,7 +92,7 @@ def run_trend_intelligence():
         snapshot_started_at=snapshot_time,
         snapshot_finished_at=snapshot_time,
         snapshot_date=snapshot_time.strftime("%Y-%m-%d"),
-        snapshot_period="CURRENT_SNAPSHOT",
+        snapshot_period=get_current_daypart(snapshot_time),
         analytics_metadata={
             "platforms": {
                 "instagram": {"status": "AVAILABLE", "posts": total_signals},
@@ -106,15 +125,15 @@ def run_trend_intelligence():
         
         # 10.3 Source Diversity & Account Concentration
         post_ids = [m.signal.post_id for m in cluster.members]
-        account_ids = [m.signal.post.page_id for m in cluster.members]
+        account_ids = [m.signal.post.source_id for m in cluster.members]
         account_counts = Counter(account_ids)
         
         unique_accounts = len(account_counts)
         source_diversity = unique_accounts / size if size > 0 else 0
         account_concentration = (account_counts.most_common(1)[0][1] / size) if size > 0 and account_counts else 1.0
         
-        # Single-platform mapping safely handles null logic
-        platform_diversity = 1.0
+        distinct_platforms = {m.signal.post.platform for m in cluster.members if m.signal.post and m.signal.post.platform}
+        platform_diversity = min(len(distinct_platforms) / total_platforms_in_corpus, 1.0) if distinct_platforms else 0.0
         
         recency_score = None
         engagement_score = None
@@ -305,12 +324,15 @@ def run_trend_intelligence():
             "representatives": item["reps"]
         }
         final_output["trends"].append(obj)
-        
-    with open("output/STAGE_10_REAL_DATA.json", "w", encoding="utf-8") as f:
-        json.dump(final_output, f, indent=4, ensure_ascii=False)
-        
-    db.close()
+
+    if write_json:
+        with open("output/STAGE_10_REAL_DATA.json", "w", encoding="utf-8") as f:
+            json.dump(final_output, f, indent=4, ensure_ascii=False)
+
+    if owns_session:
+        db.close()
     print("Stage 10 Python Engine output properly serialized successfully!")
-    
+    return trend_run
+
 if __name__ == "__main__":
     run_trend_intelligence()
