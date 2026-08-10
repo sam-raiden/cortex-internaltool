@@ -329,6 +329,42 @@ class TrendRepresentative(Base):
     signal = relationship("ProcessedSignal")
 
 
+class TrendSemanticAnalysis(Base):
+    """Stage 21 -- LLM semantic interpretation of a Trend. Deliberately a
+    separate table from Trend (not new columns on it): lets caching by
+    evidence_hash work independent of which TrendRun/rank a cluster's
+    descendant lands in, and lets multiple enrichment attempts (different
+    prompt/model versions) coexist without mutating the immutable Trend
+    snapshot. A Trend row is always fully valid with zero rows here --
+    status='FAILED' or absence both mean "enrichment unavailable", never
+    "trend invalid"."""
+    __tablename__ = 'trend_semantic_analyses'
+
+    id = Column(Integer, primary_key=True, index=True)
+    trend_id = Column(Integer, ForeignKey('trends.id', ondelete='CASCADE'), nullable=False, index=True)
+    evidence_hash = Column(String(64), nullable=False, index=True)
+    llm_model = Column(String(100), nullable=False)
+    llm_prompt_version = Column(String(50), nullable=False)
+    status = Column(String(20), nullable=False)  # SUCCESS, FAILED
+
+    normalized_topic = Column(String(255))
+    title = Column(String(255))
+    english_title = Column(String(255))
+    tamil_title = Column(String(255))
+    category = Column(String(50))
+    hashtags = Column(JSON)
+    micro_insight = Column(Text)
+    summary = Column(Text)
+    explanation = Column(Text)
+    confidence_reason = Column(Text)
+
+    error_message = Column(Text)
+    raw_response = Column(JSON)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    trend = relationship("Trend", backref="semantic_analyses")
+
+
 # Backwards compatibility aliases for Stage 1-10.5 logic
 InstagramPage = Source
 InstagramPost = RawContent

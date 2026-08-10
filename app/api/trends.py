@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.storage.database import get_db
-from app.models.schema import TrendRun, Trend
+from app.models.schema import TrendRun, Trend, TrendSemanticAnalysis
 
 router = APIRouter(prefix="/api/trends", tags=["trends"])
 
@@ -23,7 +23,17 @@ def get_latest_trends(db: Session = Depends(get_db)):
                 "canonical_text": r.signal.canonical_text if r.signal else "UNKNOWN",
                 "account": r.signal.post.page.username if r.signal and r.signal.post and r.signal.post.page else "UNKNOWN"
             })
-            
+
+        # Latest successful LLM enrichment for this trend, if any. Absence
+        # (or a FAILED-only history) means "enrichment unavailable" -- the
+        # trend itself is always fully valid regardless.
+        enrichment = (
+            db.query(TrendSemanticAnalysis)
+            .filter(TrendSemanticAnalysis.trend_id == tr.id, TrendSemanticAnalysis.status == "SUCCESS")
+            .order_by(TrendSemanticAnalysis.id.desc())
+            .first()
+        )
+
         out_trends.append({
             "rank": tr.rank,
             "trend_id": f"TRND-{tr.id}",
@@ -45,7 +55,14 @@ def get_latest_trends(db: Session = Depends(get_db)):
             "engagement_score": None,
             "velocity_score": None,
             "languages": {}, # Simplified out, provided extensively in batch JSON
-            "representatives": reps
+            "representatives": reps,
+            "llm_title": enrichment.title if enrichment else None,
+            "llm_english_title": enrichment.english_title if enrichment else None,
+            "llm_tamil_title": enrichment.tamil_title if enrichment else None,
+            "llm_category": enrichment.category if enrichment else None,
+            "llm_summary": enrichment.summary if enrichment else None,
+            "llm_micro_insight": enrichment.micro_insight if enrichment else None,
+            "llm_explanation": enrichment.explanation if enrichment else None,
         })
         
     out_trends = sorted(out_trends, key=lambda x: x["rank"])
