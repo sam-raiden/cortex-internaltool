@@ -1,0 +1,21 @@
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets / env
+.env
+
+# Local Development States
+.local/
+*.storage_state.json
+storage_state.json
+output/
+
+# Scratch / debug artifacts
+*.log
+tmp_*.txt
+pytest_*.txt
+pytest_*.log
+test_out*.txt
+stage*_test_log.txt

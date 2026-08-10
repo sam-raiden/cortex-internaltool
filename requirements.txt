@@ -1,0 +1,13 @@
+playwright
+paddleocr
+# paddlepaddle may need specific version for windows, providing base
+paddlepaddle
+faster-whisper
+sentence-transformers
+hdbscan
+sqlalchemy
+psycopg2-binary
+alembic
+pgvector
+pytest
+python-dotenv
