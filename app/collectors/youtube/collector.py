@@ -90,6 +90,7 @@ class YouTubeShortsCollector(BaseCollector):
                             vertical=source.vertical,
                             content_type="SHORT",
                             title=metadata.get("title"),
+                            text=metadata.get("title"),
                             url=link,
                             thumbnail_url=metadata.get("thumbnail_url"),
                             media_type="video",

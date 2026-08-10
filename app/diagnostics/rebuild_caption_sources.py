@@ -1,56 +1,34 @@
+"""Manual/interactive entrypoint for app.processing.normalize_raw_content.
+create_caption_sources() -- the real logic now lives there and runs
+automatically at the end of every collection cycle (Stage 14). This script
+remains useful for an ad hoc rebuild against existing data.
+"""
 import argparse
 from sqlalchemy.orm import Session
 from app.storage.database import SessionLocal
-from app.models.schema import InstagramPost, ContentSource
+from app.processing.normalize_raw_content import create_caption_sources
+
 
 def rebuild():
     parser = argparse.ArgumentParser()
     parser.add_argument("--limit", type=int, default=1000)
     args = parser.parse_args()
-    
+
     db: Session = SessionLocal()
-    posts = db.query(InstagramPost).all()
-    
-    cap_before = db.query(ContentSource).filter(ContentSource.source_type == "CAPTION").count()
-    
-    new_sources = 0
-    duplicates = 0
-    
-    for post in posts:
-        if post.caption and post.caption.strip():
-            # Check idempotency
-            existing = db.query(ContentSource).filter_by(
-                post_id=post.id, 
-                source_type="CAPTION"
-            ).first()
-            
-            if existing:
-                if existing.raw_text != post.caption:
-                    existing.raw_text = post.caption
-                    db.commit()
-                duplicates += 1
-            else:
-                db.add(ContentSource(
-                    post_id=post.id,
-                    source_type="CAPTION",
-                    raw_text=post.caption,
-                    language="unknown",
-                    confidence=1.0,
-                    duration_ms=0
-                ))
-                db.commit()
-                new_sources += 1
-                
-    cap_after = db.query(ContentSource).filter(ContentSource.source_type == "CAPTION").count()
-    db.close()
-    
+    try:
+        report = create_caption_sources(db, limit=args.limit)
+    finally:
+        db.close()
+
     print("========================================")
     print("CONTENTSOURCE REBUILD RESULTS")
     print("========================================")
-    print(f"Caption ContentSources before: {cap_before}")
-    print(f"Caption ContentSources after: {cap_after}")
-    print(f"New Caption ContentSources: {new_sources}")
-    print(f"Duplicates prevented: {duplicates}")
+    print(f"Caption ContentSources before: {report['captions_before']}")
+    print(f"Caption ContentSources after: {report['captions_after']}")
+    print(f"New Caption ContentSources: {report['new_sources']}")
+    print(f"Duplicates prevented: {report['duplicates']}")
+    print(f"Skipped (empty text): {report['skipped_empty']}")
+
 
 if __name__ == "__main__":
     rebuild()

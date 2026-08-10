@@ -6,6 +6,7 @@ from typing import List, Optional
 from app.collectors.instagram.collector import InstagramCollector
 from app.collectors.base import CollectionResult as GenericResult, CollectionBatchResult as GenericBatchResult
 from app.storage.database import SessionLocal
+from app.processing.normalize_raw_content import create_caption_sources
 from app.services.collection_run import CollectionRunService
 from app.collectors.instagram.models import CollectionBatchResult
 from app.models.schema import Source
@@ -83,6 +84,7 @@ def execute_cycle(vertical_scope: str = "ALL", sources: Optional[List[Source]] =
         CollectionRunService.log_page_result(db, run_db.id, r.page_username, _adapt_result(r))
 
     CollectionRunService.complete_run(db, run_db.id, _adapt_batch(batch_result))
+    create_caption_sources(db)
     db.close()
             
     # Serialize results API payload

@@ -6,6 +6,7 @@ from typing import List, Optional
 
 from app.collectors.youtube.collector import YouTubeShortsCollector
 from app.models.schema import Source
+from app.processing.normalize_raw_content import create_caption_sources
 from app.services.collection_run import CollectionRunService
 from app.storage.database import SessionLocal
 
@@ -29,6 +30,7 @@ def execute_cycle(vertical_scope: str = "ALL", sources: Optional[List[Source]] =
             CollectionRunService.log_page_result(db, run_db.id, external_id, res)
 
         CollectionRunService.complete_run(db, run_db.id, batch)
+        normalization_report = create_caption_sources(db)
 
         report_payload = {
             "run_id": run_id,
@@ -44,6 +46,7 @@ def execute_cycle(vertical_scope: str = "ALL", sources: Optional[List[Source]] =
             "items_skipped": batch.items_skipped,
             "overall_status": batch.status,
             "errors": batch.errors,
+            "normalization": normalization_report,
         }
 
         out_dir = pathlib.Path("output/repeatability/youtube")
