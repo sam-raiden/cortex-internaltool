@@ -1,21 +1,90 @@
 import pytest
 import os
+from datetime import datetime
 from fastapi.testclient import TestClient
 from app.main import app
-from app.storage.database import SessionLocal
-from app.models.schema import TrendRun, Trend, TrendRepresentative
+from app.models.schema import (
+    TrendRun, Trend, TrendRepresentative,
+    Source, RawContent, ProcessedSignal, ClusterRun, Cluster,
+)
 from app.processing.trend_intelligence import run_trend_intelligence
 import os
 
 client = TestClient(app)
 
-@pytest.fixture(scope="module")
-def db():
-    # Only use test db! 
-    # For CI safety, we just read whatever DB is configured, assuming it's safe.
-    d = SessionLocal()
-    yield d
-    d.close()
+@pytest.fixture
+def db(db_session):
+    return db_session
+
+@pytest.fixture(autouse=True, scope="module")
+def _seed_trend_run(db_session):
+    # This module's tests read the latest TrendRun/Trend and assert on its
+    # fields. They used to rely on a leftover TrendRun created by a different
+    # test module running earlier in the same pytest session. Now that
+    # db_session wipes its tables after every module, seed a minimal but
+    # complete Source -> RawContent -> ProcessedSignal -> ClusterRun ->
+    # Cluster -> TrendRun -> Trend -> TrendRepresentative chain here so this
+    # module is self-contained.
+    source = Source(username="stage10_seed_src", profile_url="http://seed.example", vertical="GENERAL")
+    db_session.add(source)
+    db_session.flush()
+
+    post = RawContent(
+        instagram_post_id="stage10_seed_post",
+        post_url="http://seed.example/post",
+        page_id=source.id,
+        caption="seed caption",
+    )
+    db_session.add(post)
+    db_session.flush()
+
+    signal = ProcessedSignal(
+        post_id=post.id, canonical_text="seed text", language="en", processing_status="COMPLETED"
+    )
+    db_session.add(signal)
+    db_session.flush()
+
+    cluster_run = ClusterRun(run_id="stage10_seed_cr", algorithm="hdbscan")
+    db_session.add(cluster_run)
+    db_session.flush()
+
+    cluster = Cluster(cluster_id="stage10_seed_cluster", run_id=cluster_run.id, signal_count=1)
+    db_session.add(cluster)
+    db_session.flush()
+
+    trend_run = TrendRun(
+        run_id="stage10_seed_run",
+        cluster_run_id=cluster_run.id,
+        metrics_availability={"language_distribution": {"en": 1}},
+        snapshot_date="2026-08-10",
+        snapshot_period="CURRENT_SNAPSHOT",
+        snapshot_started_at=datetime.utcnow(),
+    )
+    db_session.add(trend_run)
+    db_session.flush()
+
+    trend = Trend(
+        trend_run_id=trend_run.id,
+        cluster_id=cluster.id,
+        rank=1,
+        label="Seed Trend",
+        label_quality="HIGH",
+        trend_status="PROVISIONAL",
+        trend_score=0.5,
+        evidence_strength="MODERATE",
+        trend_confidence="MEDIUM",
+        semantic_quality="COHERENT",
+        corpus_support=0.5,
+        source_diversity=0.5,
+        platform_diversity=1.0,
+        account_concentration=0.5,
+        recency_score=None,
+    )
+    db_session.add(trend)
+    db_session.flush()
+
+    db_session.add(TrendRepresentative(trend_id=trend.id, post_id=post.id, signal_id=signal.id, rank=1))
+    db_session.commit()
 
 def test_test_database_isolation(db):
     url = str(db.get_bind().url)

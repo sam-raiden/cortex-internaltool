@@ -6,15 +6,7 @@ from app.processing.text_assembler import TextAssembler
 from app.processing.models import ContentSource
 from app.processing.processor import SignalProcessor
 from app.models.schema import InstagramPost, ProcessedSignal, InstagramPage
-from app.storage.database import SessionLocal, Base, engine
 import uuid
-
-@pytest.fixture(scope="module")
-def db_session():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    yield db
-    db.close()
 
 def test_language_detection():
     # 1. Tamil

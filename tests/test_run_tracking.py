@@ -2,15 +2,7 @@ import pytest
 from app.services.collection_run import CollectionRunService
 from app.collectors.instagram.models import CollectionBatchResult, CollectionResult
 from app.models.schema import CollectionRun, CollectionPageResult, InstagramPage
-from app.storage.database import SessionLocal, Base, engine
 
-@pytest.fixture(scope="module")
-def db_session():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    yield db
-    db.close()
-    
 def test_successful_run_lifecycle(db_session):
     run_db = CollectionRunService.start_run(db_session, "test_run_001", "AUTHENTICATED")
     assert run_db.status == "RUNNING"

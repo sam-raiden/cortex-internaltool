@@ -5,7 +5,19 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 # Setup environment for testing natively avoiding overlaps!
-TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL", "postgresql://tamilsh:pocpassword@localhost:5433/tamilsh_poc_test")
+# No default fallback: a missing TEST_DATABASE_URL must be observable and
+# must fail closed, not silently resolve to a hardcoded test URL.
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
+
+if TEST_DATABASE_URL is None or not TEST_DATABASE_URL:
+    print("\n========================================")
+    print("TEST DATABASE SAFETY FAILURE")
+    print("========================================")
+    print("TEST_DATABASE_URL is not set.")
+    print("Tests require an explicit, isolated test database URL")
+    print("(e.g. postgresql://.../tamilsh_poc_test). Refusing to run.")
+    print("========================================")
+    raise SystemExit("Aborted: TEST_DATABASE_URL missing")
 
 if "tamilsh_poc" in TEST_DATABASE_URL and not "test" in TEST_DATABASE_URL:
     print("\n========================================")
@@ -17,10 +29,7 @@ if "tamilsh_poc" in TEST_DATABASE_URL and not "test" in TEST_DATABASE_URL:
     print("Configure: TEST_DATABASE_URL=<isolated test database>")
     print("No destructive operation was executed.")
     print("========================================")
-    pytest.exit("Aborted due to protected database.")
-
-if TEST_DATABASE_URL is None or not TEST_DATABASE_URL:
-    pytest.exit("Aborted: TEST_DATABASE_URL missing")
+    raise SystemExit("Aborted due to protected database.")
 
 os.environ["DATABASE_URL"] = TEST_DATABASE_URL
 

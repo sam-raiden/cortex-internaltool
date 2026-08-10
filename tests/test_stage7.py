@@ -2,15 +2,7 @@ import pytest
 from app.processing.ocr import TesseractOCRProvider, OCRResult
 from app.processing.asr import FasterWhisperProvider, ASRResult
 from app.processing.media_validation import MediaValidator
-from app.storage.database import SessionLocal, Base, engine
 from app.models.schema import InstagramPost, ContentSource
-
-@pytest.fixture(scope="module")
-def db_session():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    yield db
-    db.close()
 
 def test_tesseract_provider():
     provider = TesseractOCRProvider()

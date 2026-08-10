@@ -6,30 +6,24 @@ from fastapi.testclient import TestClient
 from app.services.collection_run import CollectionRunService
 from app.collectors.instagram.models import CollectionBatchResult, CollectionResult
 from app.models.schema import CollectionRun, CollectionPageResult, InstagramPage, CollectionError
-from app.storage.database import SessionLocal, Base, engine
 from app.main import app
 
 client = TestClient(app)
 
-@pytest.fixture(scope="session")
-def db_session():
-    Base.metadata.create_all(bind=engine)
-    db = SessionLocal()
-    
+@pytest.fixture(autouse=True, scope="module")
+def _seed_pages(db_session):
     # Pre-populate test page
-    page1 = db.query(InstagramPage).filter_by(username="harden_test").first()
+    page1 = db_session.query(InstagramPage).filter_by(username="harden_test").first()
     if not page1:
         page1 = InstagramPage(username="harden_test", profile_url="http://test.loc")
-        db.add(page1)
-    
-    page2 = db.query(InstagramPage).filter_by(username="harden_test2").first()
+        db_session.add(page1)
+
+    page2 = db_session.query(InstagramPage).filter_by(username="harden_test2").first()
     if not page2:
         page2 = InstagramPage(username="harden_test2", profile_url="http://test2.loc")
-        db.add(page2)
-        
-    db.commit()
-    yield db
-    db.close()
+        db_session.add(page2)
+
+    db_session.commit()
 
 def test_status_classifications(db_session):
     run_id = f"test_{uuid.uuid4().hex[:8]}"
