@@ -2,54 +2,87 @@ import os
 import json
 import uuid
 import datetime
+from typing import List, Optional
 from app.collectors.instagram.collector import InstagramCollector
+from app.collectors.base import CollectionResult as GenericResult, CollectionBatchResult as GenericBatchResult
 from app.storage.database import SessionLocal
 from app.services.collection_run import CollectionRunService
 from app.collectors.instagram.models import CollectionBatchResult
+from app.models.schema import Source
 import pathlib
 
-def execute_cycle(vertical_scope: str = "ALL"):
-    config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../config/pages.json"))
-    with open(config_path, "r", encoding="utf-8") as f:
-        pages_config = json.load(f)
+
+def _adapt_result(r) -> GenericResult:
+    return GenericResult(
+        platform="instagram",
+        status="SUCCESS" if r.success else "FAILED",
+        items_discovered=r.posts_discovered,
+        items_created=r.new_posts,
+        items_skipped=r.existing_posts,
+        duration_ms=r.duration_ms,
+        error_type=r.error_type,
+        error_message=r.error_message,
+    )
+
+
+def _adapt_batch(b) -> GenericBatchResult:
+    errors = [{"source": e.get("page"), "error_type": e.get("error"), "message": e.get("msg")} for e in b.errors]
+    return GenericBatchResult(
+        run_id=b.run_id, platform="instagram", status=b.status,
+        pages_attempted=b.pages_attempted, pages_successful=b.pages_successful, pages_failed=b.pages_failed,
+        items_discovered=b.posts_discovered, items_created=b.new_posts, items_skipped=b.existing_posts,
+        duration_ms=b.duration_ms, errors=errors, session_state_valid=b.session_state_valid,
+    )
+
+
+def execute_cycle(vertical_scope: str = "ALL", sources: Optional[List[Source]] = None, dry_run: bool = False):
+    if sources is not None:
+        pages_config = [
+            {"username": s.external_id, "url": s.url, "active": True, "vertical": s.vertical}
+            for s in sources
+        ]
+    else:
+        config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../config/pages.json"))
+        with open(config_path, "r", encoding="utf-8") as f:
+            pages_config = json.load(f)
 
     # 1. Session health check
     state_path = pathlib.Path(".local/instagram/storage_state.json")
     auth_loaded = state_path.exists()
-    
+
     # 2. Assign unique ID and timestamps
     run_id = f"run_{uuid.uuid4().hex[:8]}"
     start_time = datetime.datetime.utcnow()
-    
+
     db = SessionLocal()
     session_state = "AUTHENTICATED" if auth_loaded else "SESSION_EXPIRED"
     run_db = CollectionRunService.start_run(db, run_id, session_state, vertical_scope)
-    
+
     if not auth_loaded:
         print("SESSION_EXPIRED")
-        CollectionRunService.complete_run(db, run_db.id, CollectionBatchResult(status="FAILED"))
+        CollectionRunService.complete_run(db, run_db.id, _adapt_batch(CollectionBatchResult(status="FAILED")))
         db.close()
         return
 
     # 3. Collection
-    collector = InstagramCollector(dry_run=False)
-    batch_result: CollectionBatchResult = collector.run_batch(pages_config, limit=19, vertical_scope=vertical_scope)
+    collector = InstagramCollector(dry_run=dry_run)
+    batch_result: CollectionBatchResult = collector.run_batch(pages_config, limit=len(pages_config) or 19, vertical_scope=vertical_scope)
     batch_result.run_id = run_id
-    
+
     finish_time = datetime.datetime.utcnow()
-    
+
     # If the circuit breaker stopped it and pages_successful=0, mark FAILED if not BLOCKED
     if batch_result.status == "SUCCESS":
         if batch_result.pages_failed > 0:
             batch_result.status = "PARTIAL"
         if batch_result.pages_attempted == 0:
             batch_result.status = "FAILED"
-            
+
     # Persist page-results into observability layer
     for r in batch_result.results:
-        CollectionRunService.log_page_result(db, run_db.id, r.page_username, r)
-        
-    CollectionRunService.complete_run(db, run_db.id, batch_result)
+        CollectionRunService.log_page_result(db, run_db.id, r.page_username, _adapt_result(r))
+
+    CollectionRunService.complete_run(db, run_db.id, _adapt_batch(batch_result))
     db.close()
             
     # Serialize results API payload

@@ -1,8 +1,18 @@
 import datetime
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
-from app.models.schema import CollectionRun, CollectionPageResult, InstagramPage, CollectionError
-from app.collectors.instagram.models import CollectionResult, CollectionBatchResult
+from app.models.schema import CollectionRun, CollectionPageResult, Source, CollectionError
+from app.collectors.base import CollectionResult, CollectionBatchResult
+
+# error_type values that map to a dedicated CollectionRun counter. Anything not in this
+# set (from any platform) is counted as a generic parser_errors event.
+_LOGIN_WALL_TYPES = ("login_required", "login_wall_overlay")
+_CHALLENGE_TYPES = ("challenge_detected",)
+_ACCESS_DENIED_TYPES = ("access_denied",)
+_RATE_LIMIT_TYPES = ("rate_limited",)
+_TIMEOUT_TYPES = ("timeout",)
+_CLASSIFIED_TYPES = _LOGIN_WALL_TYPES + _CHALLENGE_TYPES + _ACCESS_DENIED_TYPES + _RATE_LIMIT_TYPES + _TIMEOUT_TYPES
+
 
 class CollectionRunService:
     @staticmethod
@@ -14,7 +24,7 @@ class CollectionRunService:
             orphan.finished_at = datetime.datetime.utcnow()
         if orphans:
             db.commit()
-            
+
         run = CollectionRun(
             run_id=run_id,
             vertical_scope=vertical_scope,
@@ -28,35 +38,33 @@ class CollectionRunService:
         return run
 
     @staticmethod
-    def log_page_result(db: Session, run_internal_id: int, page_username: str, page_res: CollectionResult) -> CollectionPageResult:
-        # Fetch postgres page
-        page = db.query(InstagramPage).filter(InstagramPage.username == page_username).first()
-        if not page:
-            return None # Skip if not registered, though shouldn't happen
-            
+    def log_page_result(db: Session, run_internal_id: int, source_external_id: str, result: CollectionResult) -> CollectionPageResult:
+        source = db.query(Source).filter(Source.external_id == source_external_id).first()
+        if not source:
+            return None  # Skip if not registered, though shouldn't happen
+
         pr = CollectionPageResult(
             run_internal_id=run_internal_id,
-            page_id=page.id,
-            status="SUCCESS" if page_res.success else "FAILED",
-            duration_ms=page_res.duration_ms,
-            posts_discovered=page_res.posts_discovered,
-            new_posts=page_res.new_posts,
-            existing_posts=page_res.existing_posts,
-            error_type=page_res.error_type,
-            error_message=page_res.error_message,
+            source_id=source.id,
+            status=result.status,
+            duration_ms=result.duration_ms,
+            posts_discovered=result.items_discovered,
+            new_posts=result.items_created,
+            existing_posts=result.items_skipped,
+            error_type=result.error_type,
+            error_message=result.error_message,
         )
         db.add(pr)
-        
-        # Log to collection_errors if there's a strict failure
-        if not page_res.success and page_res.error_type:
+
+        if result.status != "SUCCESS" and result.error_type:
             err = CollectionError(
                 run_id=run_internal_id,
-                page_id=page.id,
-                error_type=page_res.error_type,
-                error_message=page_res.error_message
+                source_id=source.id,
+                error_type=result.error_type,
+                error_message=result.error_message
             )
             db.add(err)
-            
+
         db.commit()
         db.refresh(pr)
         return pr
@@ -66,32 +74,29 @@ class CollectionRunService:
         run = db.query(CollectionRun).filter(CollectionRun.id == run_internal_id).first()
         if not run:
             return None
-            
+
         run.finished_at = datetime.datetime.utcnow()
         run.status = batch.status
         run.session_state = "AUTHENTICATED" if batch.session_state_valid else "SESSION_EXPIRED"
-        
+
         run.pages_attempted = batch.pages_attempted
         run.pages_successful = batch.pages_successful
         run.pages_failed = batch.pages_failed
-        
-        run.posts_discovered = batch.posts_discovered
-        run.unique_posts = batch.posts_with_stable_ids
-        run.new_posts = batch.new_posts
-        run.existing_posts = batch.existing_posts
-        
-        run.parser_errors = batch.parser_failures
-        
-        run.navigation_errors = len([e for e in batch.errors if e.get("error") == "timeout"])
-        run.timeout_errors = batch.timeouts
-        
-        run.login_wall_events = batch.login_challenges
-        run.challenge_events = len([e for e in batch.errors if e.get("error") == "challenge_detected"])
-        run.access_denied_events = batch.access_denied_events
-        run.rate_limit_indicators = len([e for e in batch.errors if e.get("error") == "rate_limited"])
-        
+
+        run.posts_discovered = batch.items_discovered
+        run.unique_posts = batch.items_discovered
+        run.new_posts = batch.items_created
+        run.existing_posts = batch.items_skipped
+
+        run.login_wall_events = len([e for e in batch.errors if e.get("error_type") in _LOGIN_WALL_TYPES])
+        run.challenge_events = len([e for e in batch.errors if e.get("error_type") in _CHALLENGE_TYPES])
+        run.access_denied_events = len([e for e in batch.errors if e.get("error_type") in _ACCESS_DENIED_TYPES])
+        run.rate_limit_indicators = len([e for e in batch.errors if e.get("error_type") in _RATE_LIMIT_TYPES])
+        run.navigation_errors = run.timeout_errors = len([e for e in batch.errors if e.get("error_type") in _TIMEOUT_TYPES])
+        run.parser_errors = len([e for e in batch.errors if e.get("error_type") not in _CLASSIFIED_TYPES])
+
         run.duration_ms = batch.duration_ms
-        
+
         db.commit()
         db.refresh(run)
         return run
@@ -99,7 +104,7 @@ class CollectionRunService:
     @staticmethod
     def get_run(db: Session, run_id: str):
         return db.query(CollectionRun).filter(CollectionRun.run_id == run_id).first()
-        
+
     @staticmethod
     def get_latest_runs(db: Session, limit: int = 10):
         return db.query(CollectionRun).order_by(CollectionRun.started_at.desc()).limit(limit).all()
@@ -109,7 +114,7 @@ class CollectionRunService:
         return db.query(CollectionRun).filter(
             CollectionRun.status.in_(["FAILED", "DEGRADED", "BLOCKED"])
         ).order_by(CollectionRun.started_at.desc()).limit(limit).all()
-        
+
     @staticmethod
     def get_runs_with_access_events(db: Session, limit: int = 10):
         return db.query(CollectionRun).filter(
@@ -120,19 +125,19 @@ class CollectionRunService:
                 CollectionRun.rate_limit_indicators > 0
             )
         ).order_by(CollectionRun.started_at.desc()).limit(limit).all()
-        
+
     @staticmethod
     def get_page_history(db: Session, page_id: int, limit: int = 10):
         return db.query(CollectionPageResult).filter(
-            CollectionPageResult.page_id == page_id
+            CollectionPageResult.source_id == page_id
         ).order_by(CollectionPageResult.started_at.desc()).limit(limit).all()
-        
+
     @staticmethod
     def get_run_page_results(db: Session, run_internal_id: int):
         return db.query(CollectionPageResult).filter(
             CollectionPageResult.run_internal_id == run_internal_id
         ).all()
-        
+
     @staticmethod
     def get_run_statistics(db: Session):
         total_runs = db.query(CollectionRun).count()

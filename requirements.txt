@@ -11,3 +11,5 @@ alembic
 pgvector
 pytest
 python-dotenv
+feedparser
+requests

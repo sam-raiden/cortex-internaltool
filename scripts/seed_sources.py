@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PLATFORM_CONFIG_PATHS = {
     "instagram": os.path.join(BASE_DIR, "config", "pages.json"),
     "youtube": os.path.join(BASE_DIR, "config", "sources", "youtube.json"),
-    "news": os.path.join(BASE_DIR, "config", "sources", "rss.json"),
+    "rss": os.path.join(BASE_DIR, "config", "sources", "rss.json"),
 }
 
 

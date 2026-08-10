@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "external_id": "bbc_tamil",
+    "url": "https://feeds.bbci.co.uk/tamil/rss.xml",
+    "name": "BBC Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "puthiyathalaimurai",
+    "url": "https://www.puthiyathalaimurai.com/feed/",
+    "name": "Puthiya Thalaimurai",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "polimernews",
+    "url": "https://www.polimernews.com/feed/",
+    "name": "Polimer News",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "vikatan",
+    "url": "https://www.vikatan.com/feed",
+    "name": "Vikatan",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "oneindia_tamil",
+    "url": "https://tamil.oneindia.com/rss/tamil-news-fb.xml",
+    "name": "OneIndia Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "dailythanthi",
+    "url": "https://www.dailythanthi.com/feed/",
+    "name": "Daily Thanthi",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  }
+]

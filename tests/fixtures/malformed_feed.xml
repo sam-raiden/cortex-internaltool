@@ -1,0 +1,2 @@
+This is not XML or RSS at all, just plain garbage text </<> &&& to force
+a parse failure with zero recoverable entries for the RSS collector test.

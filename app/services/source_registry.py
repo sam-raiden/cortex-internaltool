@@ -12,12 +12,12 @@ from urllib.parse import urlparse
 
 from app.models.schema import Source
 
-ALLOWED_PLATFORMS = {"instagram", "youtube", "news"}
+ALLOWED_PLATFORMS = {"instagram", "youtube", "rss"}
 ALLOWED_VERTICALS = {"GENERAL", "MEDICAL"}
 PLATFORM_SOURCE_TYPES = {
     "instagram": "INSTAGRAM_ACCOUNT",
     "youtube": "YOUTUBE_CHANNEL",
-    "news": "RSS_FEED",
+    "rss": "RSS_FEED",
 }
 HEALTH_STATES = {"UNKNOWN", "HEALTHY", "DEGRADED", "FAILING", "INVALID"}
 
