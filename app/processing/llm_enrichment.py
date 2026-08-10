@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import logging
+import sys
 from collections import Counter
 from typing import List, Optional
 
@@ -293,6 +294,13 @@ def main():
         print(f"Failed: {report['failed']}")
     finally:
         db.close()
+
+    # Without this, a run where every single trend fails to enrich (e.g. the
+    # LLM is unreachable) still exits 0 -- indistinguishable from success to
+    # any caller checking the exit code (app.services.pipeline included).
+    if report["total"] > 0 and report["failed"] == report["total"]:
+        print("\nAll trend enrichments failed.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
