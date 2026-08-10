@@ -20,6 +20,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from app.models.schema import Base
 target_metadata = Base.metadata
 
+# alembic.ini's sqlalchemy.url is a hardcoded fallback (the dev DB) -- a
+# DATABASE_URL env var, when set, always takes priority. Without this,
+# `DATABASE_URL=... alembic upgrade head` silently ignores the env var and
+# migrates whatever alembic.ini points at instead, which is exactly how a
+# migration-chain bug went unnoticed against a genuinely fresh database.
+if os.environ.get("DATABASE_URL"):
+    config.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
