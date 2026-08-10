@@ -34,6 +34,7 @@ class YouTubeShortsCollector(BaseCollector):
     def collect(self, source: Source, context: Optional[Dict] = None) -> CollectionResult:
         context = context or {}
         db: Optional[Session] = context.get("db")
+        own_db = False
         page = context.get("page")
         started = time.time()
         result = CollectionResult(source_id=getattr(source, "id", None), platform="youtube")
@@ -55,7 +56,6 @@ class YouTubeShortsCollector(BaseCollector):
             links = YouTubeShortsParser.get_latest_shorts_links(page, limit=10)
             result.items_discovered = len(links)
 
-            own_db = False
             if db is None and not self.dry_run:
                 db = SessionLocal()
                 own_db = True
@@ -114,6 +114,12 @@ class YouTubeShortsCollector(BaseCollector):
         except Exception as e:
             logger.exception(f"Unexpected YouTube collection error for {source.external_id}")
             result.status, result.error_type, result.error_message = "FAILED", "collector_error", str(e)
+            # See app/collectors/rss/collector.py's identical fix: a failed
+            # insert/commit leaves a shared, batch-level session in a
+            # PendingRollbackError state that would otherwise cascade into
+            # every subsequent source in the same run_batch().
+            if not own_db and db is not None:
+                db.rollback()
 
         return self._finish(result, started)
 

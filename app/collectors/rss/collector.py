@@ -112,6 +112,13 @@ class RSSCollector(BaseCollector):
         except Exception as e:
             logger.exception(f"Unexpected RSS collection error for {source.external_id}")
             result.status, result.error_type, result.error_message = "FAILED", "collector_error", str(e)
+            # A failed insert/commit leaves a shared, batch-level session in a
+            # PendingRollbackError state -- without rolling back here, every
+            # subsequent source in the same run_batch() would also fail,
+            # cascading one bad record into the whole batch. Roll back only
+            # (never close) when this collect() call didn't own the session.
+            if not own_db and db is not None:
+                db.rollback()
         finally:
             if own_db:
                 db.close()

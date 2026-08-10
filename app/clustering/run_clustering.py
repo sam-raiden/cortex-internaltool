@@ -1,4 +1,5 @@
 import hdbscan
+import importlib.metadata
 import time
 import argparse
 import numpy as np
@@ -95,7 +96,7 @@ class ClusteringService:
             run = ClusterRun(
                 run_name=run_name,
                 embedding_model="paraphrase-multilingual-MiniLM-L12-v2",
-                hdbscan_version=hdbscan.__version__,
+                hdbscan_version=importlib.metadata.version("hdbscan"),
                 min_cluster_size=self.runner.min_cluster_size,
                 min_samples=self.runner.min_samples
             )

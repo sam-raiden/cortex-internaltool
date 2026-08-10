@@ -33,7 +33,7 @@ class Source(Base):
     configuration = Column(JSON)
     last_collected_at = Column(DateTime)
     last_success_at = Column(DateTime)
-    last_post_id = Column(String(100))
+    last_post_id = Column(String(512))
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -54,7 +54,7 @@ class RawContent(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     source_id = Column(Integer, ForeignKey('sources.id'), nullable=False, index=True)
-    external_content_id = Column(String(100), unique=True, nullable=False, index=True)
+    external_content_id = Column(String(512), unique=True, nullable=False, index=True)
     instagram_post_id = synonym('external_content_id')
     platform = Column(String(50), default='instagram')
     vertical = Column(String(50), default='GENERAL')
