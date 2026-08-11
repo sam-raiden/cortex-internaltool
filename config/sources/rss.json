@@ -78,5 +78,21 @@
   {"external_id": "tamilhealthin_rss", "url": "https://www.tamilhealth.in/feeds/posts/default?alt=rss", "name": "Tamil Health", "vertical": "MEDICAL", "priority": 1, "enabled": true},
   {"external_id": "asianettamilhealth_rss", "url": "https://tamil.asianetnews.com/rss/health", "name": "Asianet Tamil Health", "vertical": "MEDICAL", "priority": 1, "enabled": true},
   {"external_id": "oneindiatamilhealth_rss", "url": "https://tamil.oneindia.com/rss/feeds/tamil-health-fb.xml", "name": "OneIndia Tamil Health", "vertical": "MEDICAL", "priority": 1, "enabled": true},
-  {"external_id": "kumudam_health_rss", "url": "https://kumudam.com/rss/category/health", "name": "Kumudam - Health", "vertical": "MEDICAL", "priority": 1, "enabled": true}
+  {"external_id": "kumudam_health_rss", "url": "https://kumudam.com/rss/category/health", "name": "Kumudam - Health", "vertical": "MEDICAL", "priority": 1, "enabled": true},
+  {"external_id": "oneindia_main_rss", "url": "https://tamil.oneindia.com/rss/feeds/oneindia-tamil-fb.xml", "name": "Oneindia Tamil - Main Feed", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "oneindia_cinema_rss", "url": "https://tamil.oneindia.com/rss/feeds/tamil-cinema-fb.xml", "name": "Oneindia Tamil - Cinema", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "oneindia_tech_rss", "url": "https://tamil.oneindia.com/rss/feeds/tamil-technology-fb.xml", "name": "Oneindia Tamil - Technology", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "oneindia_ai_rss", "url": "https://tamil.oneindia.com/rss/feeds/artificial-intelligence-fb.xml", "name": "Oneindia Tamil - Artificial Intelligence", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "oneindia_education_rss", "url": "https://tamil.oneindia.com/rss/feeds/tamil-education-fb.xml", "name": "Oneindia Tamil - Education", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "oneindia_gold_rate_rss", "url": "https://tamil.oneindia.com/rss/feeds/oneindia-gold-rate-fb.xml", "name": "Oneindia Tamil - Gold Rate", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "tnnews_latest_rss", "url": "https://tnnews.org/Tamil/rss/latest-posts", "name": "TNNEWS Tamil - Latest Posts", "vertical": "GENERAL", "priority": 2, "enabled": true},
+  {"external_id": "tnnews_velicham_rss", "url": "https://tnnews.org/Tamil/rss/category/velicham-news", "name": "TNNEWS Tamil - Velicham News", "vertical": "GENERAL", "priority": 2, "enabled": true},
+  {"external_id": "abplive_news_rss", "url": "https://tamil.abplive.com/news/feed", "name": "ABP Live Tamil - News", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "abplive_entertainment_rss", "url": "https://tamil.abplive.com/entertainment/feed", "name": "ABP Live Tamil - Entertainment", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "abplive_sports_rss", "url": "https://tamil.abplive.com/sports/feed", "name": "ABP Live Tamil - Sports", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "abplive_business_rss", "url": "https://tamil.abplive.com/business/feed", "name": "ABP Live Tamil - Business", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "abplive_technology_rss", "url": "https://tamil.abplive.com/technology/feed", "name": "ABP Live Tamil - Technology", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "abplive_lifestyle_rss", "url": "https://tamil.abplive.com/lifestyle/feed", "name": "ABP Live Tamil - Lifestyle", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "abplive_agriculture_rss", "url": "https://tamil.abplive.com/agriculture/feed", "name": "ABP Live Tamil - Agriculture", "vertical": "GENERAL", "priority": 1, "enabled": true},
+  {"external_id": "abplive_factcheck_rss", "url": "https://tamil.abplive.com/fact-check/feed", "name": "ABP Live Tamil - Fact Check", "vertical": "GENERAL", "priority": 1, "enabled": true}
 ]

@@ -510,5 +510,149 @@
     "vertical": "MEDICAL",
     "priority": 1,
     "enabled": true
+  },
+  {
+    "external_id": "oneindiatamil",
+    "url": "https://www.youtube.com/@OneIndiaTamil/shorts",
+    "name": "Oneindia Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "maalaimalar",
+    "url": "https://www.youtube.com/@MaalaiMalar/shorts",
+    "name": "Maalaimalar",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "dinakarannews",
+    "url": "https://www.youtube.com/@DinakaranNews/shorts",
+    "name": "Dinakaran News",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "abpnadu",
+    "url": "https://www.youtube.com/@ABPNadu/shorts",
+    "name": "ABP Nadu",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "hindutamilthisai",
+    "url": "https://www.youtube.com/@HinduTamilThisai/shorts",
+    "name": "Hindu Tamil Thisai",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "aarifsmindvoice",
+    "url": "https://www.youtube.com/@AarifsMindVoice/shorts",
+    "name": "Aarif's MindVoice",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "nareshkuruvilla",
+    "url": "https://www.youtube.com/@nareshkuruvilla/shorts",
+    "name": "Naresh Kuruvilla",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "sombuthirudan",
+    "url": "https://www.youtube.com/@SOMBUTHIRUDAN/shorts",
+    "name": "SOMBU THIRUDAN",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "sharptamilgaming",
+    "url": "https://www.youtube.com/@SharpTamilGaming/shorts",
+    "name": "Sharp Tamil Gaming",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "vibewithgovind",
+    "url": "https://www.youtube.com/@vibewithgovind/shorts",
+    "name": "govind's thought shorts",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "0balancehero",
+    "url": "https://www.youtube.com/@0BalanceHero/shorts",
+    "name": "Zero Balance Hero",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "harshasaiforyoutamil",
+    "url": "https://www.youtube.com/@HarshaSaiForYouTamil/shorts",
+    "name": "Harsha Sai - For You Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "themaduraifoodie",
+    "url": "https://www.youtube.com/@TheMaduraiFoodie/shorts",
+    "name": "The Madurai Foodie",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "tamilmedtalks",
+    "url": "https://www.youtube.com/@TAMILMEDTALKS/shorts",
+    "name": "TAMIL MED TALKS",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "news7tamilhealth_yt",
+    "url": "https://www.youtube.com/@news7tamilhealth/shorts",
+    "name": "News7 Tamil Health",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "kauveryhospital_yt",
+    "url": "https://www.youtube.com/@KauveryHospital/shorts",
+    "name": "Kauvery Hospital",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "healthtipstamiltv",
+    "url": "https://www.youtube.com/@healthtipstamiltv/shorts",
+    "name": "Health Tips Tamil TV",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "simshospitalchennai_yt",
+    "url": "https://www.youtube.com/@SIMSHospitalVadapalaniChennai/shorts",
+    "name": "SIMS Hospital, Chennai (SRM Education & Research Institute)",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
   }
 ]
