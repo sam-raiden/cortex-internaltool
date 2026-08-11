@@ -20,6 +20,7 @@ from collections import Counter
 from typing import List, Optional
 
 from pydantic import BaseModel, ValidationError, field_validator
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.orm import Session
 
 from app.models.schema import Trend, TrendRepresentative, TrendRun, TrendSemanticAnalysis
@@ -29,7 +30,11 @@ from app.storage.database import SessionLocal
 logger = logging.getLogger(__name__)
 
 DEFAULT_MODEL = "qwen3:8b"
-PROMPT_VERSION = "v2"  # v2: category taxonomy corrected to match the real frontend contract's
+PROMPT_VERSION = "v3"  # v3: title/normalized_topic/micro_insight/summary/explanation are now
+                        # explicitly required to be English regardless of evidence language --
+                        # the frontend only ever displays `title`, and it was coming back in
+                        # whatever language the evidence happened to be in (often Tamil).
+                        # v2: category taxonomy corrected to match the real frontend contract's
                         # TrendCategory enum (src/types.ts) -- v1 used an invented taxonomy that
                         # doesn't match. Bumping the version deliberately invalidates old cache
                         # entries so no cached v1-taxonomy result is ever served under v2's schema.
@@ -45,6 +50,15 @@ SYSTEM_PROMPT = (
     "language distribution, plus deterministic scores that have already been "
     "computed by other code. Your job is ONLY to interpret this evidence into a "
     "human-readable title, summary, and category.\n\n"
+    "LANGUAGE RULE (important -- read carefully):\n"
+    "- The evidence you're given may be in Tamil, English, or a Tamil/English mix -- "
+    "that's fine, read and understand all of it regardless of language.\n"
+    "- But your OUTPUT must always be in English: normalized_topic, title, "
+    "micro_insight, summary, explanation, and confidence_reason are all English, "
+    "even when every piece of evidence is in Tamil. Translate/interpret, never "
+    "leave Tamil text in these fields.\n"
+    "- The one exception is tamil_title, which is specifically the Tamil-language "
+    "version of the title -- that field, and only that field, should be in Tamil.\n\n"
     "STRICT RULES:\n"
     "- Never invent or state any number, count, statistic, view/like/share count, "
     "or date/timestamp that was not explicitly given to you in the evidence.\n"
@@ -258,11 +272,29 @@ def enrich_trend_run(db: Session, trend_run_id: Optional[int] = None, model: str
 
     enriched = cached = failed = 0
     for trend in trends:
-        evidence = build_evidence(db, trend)
-        h = evidence_hash(evidence, model, PROMPT_VERSION) if evidence["representative_texts"] else None
-        was_cached = bool(h and get_cached_analysis(db, h))
+        try:
+            evidence = build_evidence(db, trend)
+            h = evidence_hash(evidence, model, PROMPT_VERSION) if evidence["representative_texts"] else None
+            was_cached = bool(h and get_cached_analysis(db, h))
 
-        row = enrich_trend(db, trend, model=model, client=client)
+            row = enrich_trend(db, trend, model=model, client=client)
+        except (OperationalError, PendingRollbackError) as e:
+            # A long enrichment run (hundreds of trends, real LLM calls each
+            # taking tens of seconds) gives a transient DB connection drop a
+            # real window to land here -- confirmed live, this same failure
+            # mode already fixed in the collectors (see
+            # app/collectors/rss/collector.py's comment for the full
+            # explanation). close() lets this session transparently get a
+            # fresh connection on its next use instead of crashing the
+            # whole run over one trend's bad luck.
+            logger.warning(f"Connection drop enriching trend {trend.id}, recovering session: {e}")
+            try:
+                db.close()
+            except Exception:
+                pass
+            db = SessionLocal()
+            failed += 1
+            continue
 
         if row.status != "SUCCESS":
             failed += 1
