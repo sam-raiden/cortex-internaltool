@@ -12,7 +12,7 @@ class ClusteringService:
         self.runner = HDBSCANRunner(min_cluster_size=min_cluster_size, min_samples=min_samples)
         self.db = SessionLocal()
         
-    def run(self, limit=100, diagnostic=False):
+    def run(self, limit=0, diagnostic=False):
         print("========================================")
         print("STAGE 9 — HDBSCAN CLUSTERING")
         print("========================================\n")
@@ -129,7 +129,7 @@ class ClusteringService:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--limit', type=int, default=100)
+    parser.add_argument('--limit', type=int, default=0, help="Max signals to cluster, 0 = no limit (cluster everything eligible)")
     parser.add_argument('--diagnostic', action='store_true')
     parser.add_argument('--min-cluster-size', type=int, default=2)
     parser.add_argument('--min-samples', type=int, default=1)

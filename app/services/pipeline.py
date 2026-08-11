@@ -42,7 +42,7 @@ def run_full_pipeline(
     platforms: Optional[List[str]] = None,
     daypart: Optional[str] = None,
     enrich: bool = False,
-    embedding_limit: int = 200,
+    embedding_limit: int = 0,
     dry_run: bool = False,
 ) -> dict:
     platforms = platforms or ["instagram", "youtube", "rss"]
@@ -89,7 +89,7 @@ def main():
     parser.add_argument("--daypart", default=None, choices=["morning", "afternoon", "evening"],
                          help="If set, resolves due sources via the scheduler instead of collecting everything")
     parser.add_argument("--enrich", action="store_true", help="Also run LLM enrichment after trend scoring")
-    parser.add_argument("--embedding-limit", type=int, default=200)
+    parser.add_argument("--embedding-limit", type=int, default=0, help="0 = no limit (process everything eligible)")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 

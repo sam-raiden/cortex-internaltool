@@ -13,7 +13,7 @@ from app.processing.embeddings import EmbeddingProvider
 
 def main():
     parser = argparse.ArgumentParser(description="Build Semantic Signals and Embeddings for POC limits")
-    parser.add_argument("--limit", type=int, default=20, help="Number of records to evaluate/process")
+    parser.add_argument("--limit", type=int, default=0, help="Max records to evaluate/process, 0 = no limit (process everything eligible)")
     args = parser.parse_args()
     
     db: Session = SessionLocal()
@@ -31,9 +31,15 @@ def main():
     provider = EmbeddingProvider()
     model_load_ms = int((time.time() - t_m1) * 1000)
     
-    # 2. Fetch targets 
+    # 2. Fetch targets
     # Find active posts. We use InstagramPost as the core root to gather all sources
-    posts = db.query(InstagramPost).limit(args.limit).all()
+    # (a legacy alias for RawContent -- this covers every platform, not just Instagram).
+    # Newest-first so a real --limit (if ever passed) prioritizes fresh content over
+    # whatever happened to be inserted first.
+    query = db.query(InstagramPost).order_by(InstagramPost.id.desc())
+    if args.limit > 0:
+        query = query.limit(args.limit)
+    posts = query.all()
     
     evaluated = 0
     eligible = 0
