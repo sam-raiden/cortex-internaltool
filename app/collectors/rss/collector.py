@@ -22,7 +22,11 @@ from app.storage.database import SessionLocal
 logger = logging.getLogger(__name__)
 
 REQUEST_TIMEOUT_SECONDS = 10
-USER_AGENT = "CortexTrendsBot/1.0 (+https://cortex-trends.local)"
+# A self-identifying bot UA gets 403'd by at least one real source (News18
+# Tamil) even though its RSS feed is public and meant to be polled --
+# confirmed live. A standard browser UA (matching what the Playwright
+# collectors already send) gets through.
+USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 
 class RSSCollector(BaseCollector):
