@@ -9,14 +9,15 @@ separate, additive router.
 import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from app.models.schema import ProcessedSignal, Source, Trend, TrendRun
+from app.models.schema import Job, ProcessedSignal, Source, Trend, TrendRun
 from app.processing.llm_enrichment import enrich_trend_run
 from app.processing.trend_intelligence import run_trend_intelligence
+from app.services.job_queue import create_job, run_job, serialize_job
 from app.services.trend_view import (
     compute_emerging_trends, compute_fastest_rising, compute_medical_intelligence,
     compute_platform_leadership, compute_platform_pulse, get_previous_trend_run,
@@ -206,18 +207,45 @@ class RefreshSnapshotRequestBody(BaseModel):
     enrich: Optional[bool] = False
 
 
-@router.post("/snapshot/refresh")
-def refresh_snapshot(body: RefreshSnapshotRequestBody = RefreshSnapshotRequestBody(), db: Session = Depends(get_db)):
+def _do_snapshot_refresh(db: Session, enrich: bool) -> dict:
+    """The actual refresh work, run inside a background task (see
+    refresh_snapshot below) instead of blocking the HTTP request -- trend
+    scoring plus optional LLM enrichment (each call ~5s+) made this a slow
+    synchronous endpoint before. Raising here is caught by job_queue.run_job
+    and recorded as a FAILED job rather than crashing the background task."""
     trend_run = run_trend_intelligence(db=db, write_json=False)
     if trend_run is None:
-        return _error("NO_CLUSTER_RUN", "No cluster run available -- run clustering before refreshing trends", 409)
+        raise ValueError("No cluster run available -- run clustering before refreshing trends")
 
-    if body.enrich:
+    if enrich:
         enrich_trend_run(db, trend_run_id=trend_run.id)
 
     snapshot = _build_snapshot(db, trend_run)
-    return _ok({
+    return {
         "snapshot": snapshot,
         "refreshedAt": datetime.datetime.utcnow().isoformat() + "Z",
         "signalsIngested": trend_run.corpus_size or 0,
+    }
+
+
+@router.post("/snapshot/refresh", status_code=202)
+def refresh_snapshot(
+    background_tasks: BackgroundTasks,
+    body: RefreshSnapshotRequestBody = RefreshSnapshotRequestBody(),
+    db: Session = Depends(get_db),
+):
+    job = create_job(db, job_type="snapshot_refresh", params={"enrich": bool(body.enrich), "daypart": body.daypart})
+    background_tasks.add_task(run_job, job.id, lambda job_db: _do_snapshot_refresh(job_db, body.enrich))
+    return _ok({
+        "jobId": job.id,
+        "status": job.status,
+        "message": f"Snapshot refresh started -- poll GET /api/v1/jobs/{job.id} for status",
     })
+
+
+@router.get("/jobs/{job_id}")
+def get_job(job_id: int, db: Session = Depends(get_db)):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if job is None:
+        return _error("JOB_NOT_FOUND", f"No job with id {job_id}", 404)
+    return _ok(serialize_job(job))

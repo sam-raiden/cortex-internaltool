@@ -365,6 +365,24 @@ class TrendSemanticAnalysis(Base):
     trend = relationship("Trend", backref="semantic_analyses")
 
 
+class Job(Base):
+    """Backs a minimal async job queue (app.services.job_queue) so
+    long-running endpoints like POST /snapshot/refresh can return
+    immediately instead of blocking the caller for the full duration of
+    trend scoring + optional LLM enrichment."""
+    __tablename__ = 'jobs'
+
+    id = Column(Integer, primary_key=True, index=True)
+    job_type = Column(String(50), nullable=False, index=True)
+    status = Column(String(20), nullable=False, default='PENDING', index=True)  # PENDING, RUNNING, SUCCESS, FAILED
+    params = Column(JSON)
+    result = Column(JSON)
+    error_message = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)
+    started_at = Column(DateTime)
+    finished_at = Column(DateTime)
+
+
 # Backwards compatibility aliases for Stage 1-10.5 logic
 InstagramPage = Source
 InstagramPost = RawContent

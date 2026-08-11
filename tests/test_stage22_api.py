@@ -75,9 +75,20 @@ def _seed_trend(db_session, suffix, platform="instagram", vertical="GENERAL",
 # ---------------------------------------------------------------------------
 
 def test_snapshot_refresh_without_cluster_run_returns_error(db_session):
+    # Refresh is now async (job_queue) -- the POST itself just enqueues and
+    # always returns 202; the "no cluster run" error now surfaces as a
+    # FAILED job, not a synchronous error response. TestClient runs
+    # BackgroundTasks to completion before .post() returns, so the job is
+    # already resolved by the time we poll it.
     resp = client.post("/api/v1/snapshot/refresh", json={})
-    assert resp.status_code == 409
-    assert resp.json()["error"]["code"] == "NO_CLUSTER_RUN"
+    assert resp.status_code == 202
+    job_id = resp.json()["data"]["jobId"]
+
+    job_resp = client.get(f"/api/v1/jobs/{job_id}")
+    assert job_resp.status_code == 200
+    job = job_resp.json()["data"]
+    assert job["status"] == "FAILED"
+    assert "No cluster run available" in job["errorMessage"]
 
 
 def test_snapshot_no_data_returns_error_envelope(db_session):
@@ -241,11 +252,26 @@ def test_snapshot_refresh_creates_new_trend_run(db_session):
 
     before_count = db_session.query(TrendRun).count()
 
+    # Async now -- POST just enqueues (202 + jobId), the real work runs in a
+    # BackgroundTask. TestClient runs it to completion before .post()
+    # returns, so polling the job immediately after already sees the
+    # resolved SUCCESS state.
     resp = client.post("/api/v1/snapshot/refresh", json={})
-    assert resp.status_code == 200
-    body = resp.json()["data"]
-    assert "snapshot" in body and "refreshedAt" in body and "signalsIngested" in body
+    assert resp.status_code == 202
+    job_id = resp.json()["data"]["jobId"]
 
+    job_resp = client.get(f"/api/v1/jobs/{job_id}")
+    assert job_resp.status_code == 200
+    job = job_resp.json()["data"]
+    assert job["status"] == "SUCCESS"
+    result = job["result"]
+    assert "snapshot" in result and "refreshedAt" in result and "signalsIngested" in result
+
+    # The background task committed via its own DB session (job_queue.run_job
+    # opens SessionLocal() directly, not db_session) -- db_session.query()
+    # here issues a fresh SELECT against the same real test database, which
+    # sees the other session's already-committed row under Postgres's
+    # default READ COMMITTED isolation.
     after_count = db_session.query(TrendRun).count()
     assert after_count == before_count + 1
 
