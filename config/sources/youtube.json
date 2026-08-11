@@ -46,5 +46,469 @@
     "vertical": "MEDICAL",
     "priority": 1,
     "enabled": true
+  },
+  {
+    "external_id": "thanthitv",
+    "url": "https://www.youtube.com/@thanthitv/shorts",
+    "name": "Thanthi TV",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "newstamil24x7tv",
+    "url": "https://www.youtube.com/@NewsTamil24X7TV/shorts",
+    "name": "NewsTamil 24X7",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "news7tamil_yt",
+    "url": "https://www.youtube.com/@news7tamil/shorts",
+    "name": "News7 Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "news18tamilnadu",
+    "url": "https://www.youtube.com/@News18Tamilnadu/shorts",
+    "name": "News18 Tamil Nadu",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "suntv",
+    "url": "https://www.youtube.com/@suntv/shorts",
+    "name": "Sun TV",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "irfansview1",
+    "url": "https://www.youtube.com/@irfansview1/shorts",
+    "name": "Irfan's view",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "madangowri_yt",
+    "url": "https://www.youtube.com/@madangowri/shorts",
+    "name": "Madan Gowri",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "madangowriclip",
+    "url": "https://www.youtube.com/@madangowriclip/shorts",
+    "name": "Madan Gowri Clips",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "tamiltechofficial",
+    "url": "https://www.youtube.com/@TamilTechOfficial/shorts",
+    "name": "Tamil Tech - MrTT",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "tamilselvan",
+    "url": "https://www.youtube.com/@TamilSelvan/shorts",
+    "name": "Tamil Selvan - தமிழ் செல்வன்",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "techthalaiva",
+    "url": "https://www.youtube.com/@TechThalaiva/shorts",
+    "name": "Tech Thalaiva",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "mrtamiltech",
+    "url": "https://www.youtube.com/@MrTamilTech/shorts",
+    "name": "TamilTech SHORTS",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "madhubhaskarantamil",
+    "url": "https://www.youtube.com/@MadhuBhaskaranTamil/shorts",
+    "name": "Madhu Bhaskaran Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "shijitechtamil",
+    "url": "https://www.youtube.com/@shijitechtamil/shorts",
+    "name": "Shiji Tech Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "vamvodcast",
+    "url": "https://www.youtube.com/@VAMVodcast/shorts",
+    "name": "VAM Vodcast",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "itamil",
+    "url": "https://www.youtube.com/@iTamil/shorts",
+    "name": "iTamil Academy",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "arvinthincer",
+    "url": "https://www.youtube.com/@Arvinthincer/shorts",
+    "name": "Arvinth Senthilkumar",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "sriramselvan",
+    "url": "https://www.youtube.com/@sriramselvan/shorts",
+    "name": "Sriram Selvan",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "creativekothanaar",
+    "url": "https://www.youtube.com/@creativekothanaar/shorts",
+    "name": "Creative Kothanaar",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "erumasaani",
+    "url": "https://www.youtube.com/@ErumaSaani/shorts",
+    "name": "Eruma Saani",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "parithabangal",
+    "url": "https://www.youtube.com/@Parithabangal/shorts",
+    "name": "Parithabangal",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "templemonkeys",
+    "url": "https://www.youtube.com/@TempleMonkeys/shorts",
+    "name": "Temple Monkeys",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "a2dchannel",
+    "url": "https://www.youtube.com/@A2DChannel/shorts",
+    "name": "A2D Channel",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "madrascentral",
+    "url": "https://www.youtube.com/@MadrasCentral/shorts",
+    "name": "Madras Central",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "galattatamil",
+    "url": "https://www.youtube.com/@GalattaTamil/shorts",
+    "name": "Galatta Tamil | கலாட்டா தமிழ்",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "cinemavikatan",
+    "url": "https://www.youtube.com/@CinemaVikatan/shorts",
+    "name": "Cinema Vikatan",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "cineulagam",
+    "url": "https://www.youtube.com/@Cineulagam/shorts",
+    "name": "Cineulagam",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "valaipechu",
+    "url": "https://www.youtube.com/@ValaiPechu/shorts",
+    "name": "Valai Pechu",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "tamiltalkies",
+    "url": "https://www.youtube.com/@TamilTalkies/shorts",
+    "name": "Tamil Talkies",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "plipplip",
+    "url": "https://www.youtube.com/@PlipPlip/shorts",
+    "name": "Plip Plip",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "tamilpokkisham",
+    "url": "https://www.youtube.com/@TamilPokkisham/shorts",
+    "name": "Tamil Pokkisham",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "homecookingtamil",
+    "url": "https://www.youtube.com/@HomeCookingTamil/shorts",
+    "name": "HomeCooking Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "gopisudhakar",
+    "url": "https://www.youtube.com/@GopiSudhakar/shorts",
+    "name": "GopiSudhakar",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "smilesettai",
+    "url": "https://www.youtube.com/@SmileSettai/shorts",
+    "name": "Smile Settai",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "danjrvlogs",
+    "url": "https://www.youtube.com/@DanJrVlogs/shorts",
+    "name": "DAN JR VLOGS",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "peppafoodie",
+    "url": "https://www.youtube.com/@PeppaFoodie/shorts",
+    "name": "Peppa Foodie",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "idrisexplores",
+    "url": "https://www.youtube.com/@IdrisExplores/shorts",
+    "name": "Idris Explores",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "foodareatamil",
+    "url": "https://www.youtube.com/@FoodAreaTamil/shorts",
+    "name": "Food Area Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "ddtamilnews",
+    "url": "https://www.youtube.com/@DDTamilNews/shorts",
+    "name": "DD Tamil News",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "zeetamilnews",
+    "url": "https://www.youtube.com/@ZeeTamilNews/shorts",
+    "name": "Zee Tamil News",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "kalaignartvnews",
+    "url": "https://www.youtube.com/@KalaignarTVNews/shorts",
+    "name": "Kalaignar TV News",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "nakkheerantv",
+    "url": "https://www.youtube.com/@NakkheeranTV/shorts",
+    "name": "Nakkheeran TV",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "vikatantv",
+    "url": "https://www.youtube.com/@VikatanTV/shorts",
+    "name": "VikatanTV",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "sakthivikatan",
+    "url": "https://www.youtube.com/@SakthiVikatan/shorts",
+    "name": "Sakthi Vikatan",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "rajshritamil",
+    "url": "https://www.youtube.com/@RajshriTamil/shorts",
+    "name": "Rajshri Tamil",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "sunlife",
+    "url": "https://www.youtube.com/@SunLife/shorts",
+    "name": "Sun Life",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "omsaravanabhava",
+    "url": "https://www.youtube.com/@OmSaravanaBhava/shorts",
+    "name": "OmSaravanaBhava",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "puthuyugamtv",
+    "url": "https://www.youtube.com/@PuthuYugamTV/shorts",
+    "name": "PuthuYugamTV",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "tamilcinemas",
+    "url": "https://www.youtube.com/@Tamilcinemas/shorts",
+    "name": "Tamil cinema",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "4ktamilcinema",
+    "url": "https://www.youtube.com/@4KTamilCinema/shorts",
+    "name": "4K Tamil Cinema",
+    "vertical": "GENERAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "doctorvikatan",
+    "url": "https://www.youtube.com/@doctorvikatan/shorts",
+    "name": "Doctor Vikatan",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "drkarthik",
+    "url": "https://www.youtube.com/@drkarthik/shorts",
+    "name": "Doctor Karthikeyan",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "ullangaiyilmaruthuvam",
+    "url": "https://www.youtube.com/@UllangaiyilMaruthuvam/shorts",
+    "name": "Ullangaiyil Maruthuvam",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "dr_p_sivakumar",
+    "url": "https://www.youtube.com/@Dr.P.Sivakumar/shorts",
+    "name": "Dr.Siva's Hale & Healthy",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "tamilspeechbox",
+    "url": "https://www.youtube.com/@tamilspeechbox/shorts",
+    "name": "Tamil Speech Box",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "sahatvamerica",
+    "url": "https://www.youtube.com/@SahaTVAmerica/shorts",
+    "name": "Saha TV Tamil America",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "asminfo2019",
+    "url": "https://www.youtube.com/@asminfo2019/shorts",
+    "name": "ASM INFO",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
+  },
+  {
+    "external_id": "bachflowervnadikavi",
+    "url": "https://www.youtube.com/@bachflowervnadikavi/shorts",
+    "name": "Bach Flower VNAdikavi",
+    "vertical": "MEDICAL",
+    "priority": 1,
+    "enabled": true
   }
 ]
