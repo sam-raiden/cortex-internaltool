@@ -13,6 +13,7 @@ from typing import Dict, List, Optional
 
 import feedparser
 import requests
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.orm import Session
 
 from app.collectors.base import BaseCollector, CollectionBatchResult, CollectionResult
@@ -37,7 +38,17 @@ class RSSCollector(BaseCollector):
         context = context or {}
         db: Optional[Session] = context.get("db")
         started = time.time()
-        result = CollectionResult(source_id=getattr(source, "id", None), platform="rss")
+        try:
+            # A prior source's db.commit() in this same shared batch session
+            # expires every ORM object attached to it (SQLAlchemy's default
+            # expire_on_commit) -- if the connection is also broken (e.g. a
+            # transient network drop), even this read-only attribute access
+            # re-queries the DB and can raise. Defaulting to None here keeps
+            # that from crashing collect() before its own try block even starts.
+            source_id = source.id
+        except Exception:
+            source_id = None
+        result = CollectionResult(source_id=source_id, platform="rss")
 
         try:
             resp = requests.get(source.url, timeout=REQUEST_TIMEOUT_SECONDS, headers={"User-Agent": USER_AGENT})
@@ -114,15 +125,35 @@ class RSSCollector(BaseCollector):
                     source.last_post_id = latest_id
                 db.commit()
         except Exception as e:
-            logger.exception(f"Unexpected RSS collection error for {source.external_id}")
+            # source_id (captured safely above, before this try block) used
+            # here instead of source.external_id -- the ORM object may
+            # already be expired (see the comment above result=...), and
+            # touching it again inside an exception handler is exactly how a
+            # single transient failure turned into a crash in the logging
+            # path itself (confirmed live).
+            logger.exception(f"Unexpected RSS collection error for source_id={source_id}")
             result.status, result.error_type, result.error_message = "FAILED", "collector_error", str(e)
-            # A failed insert/commit leaves a shared, batch-level session in a
-            # PendingRollbackError state -- without rolling back here, every
-            # subsequent source in the same run_batch() would also fail,
-            # cascading one bad record into the whole batch. Roll back only
-            # (never close) when this collect() call didn't own the session.
             if not own_db and db is not None:
-                db.rollback()
+                if isinstance(e, (OperationalError, PendingRollbackError)):
+                    # A hard socket-level connection abort (confirmed live)
+                    # isn't reliably recovered by rollback() alone -- it left
+                    # the session raising PendingRollbackError on every
+                    # subsequent source. close() fully releases the broken
+                    # connection; this same Session object transparently
+                    # checks out a fresh one on its next use, so the caller
+                    # (run_batch, which owns this session across the whole
+                    # batch) doesn't need to replace `db` itself.
+                    try:
+                        db.close()
+                    except Exception:
+                        pass
+                else:
+                    # A failed insert/commit leaves a shared, batch-level
+                    # session in a PendingRollbackError state -- without
+                    # rolling back here, every subsequent source in the same
+                    # run_batch() would also fail, cascading one bad record
+                    # into the whole batch.
+                    db.rollback()
         finally:
             if own_db:
                 db.close()
@@ -157,21 +188,54 @@ class RSSCollector(BaseCollector):
 
         db = SessionLocal() if not self.dry_run else None
         try:
-            for source in active:
+            for source_idx, source in enumerate(active):
                 batch.pages_attempted += 1
+                # Captured as a plain string up front, not read from the ORM
+                # object again anywhere below -- SQLAlchemy expires every
+                # object on this shared session after each collect() call's
+                # db.commit() (default expire_on_commit), so a *read* of
+                # source.external_id after that point can itself trigger a
+                # fresh DB query. If the connection has also dropped (a real
+                # transient failure mode, confirmed live), that turns a
+                # single source's network blip into a crash in the error-
+                # logging path itself, on an unrelated later source. This
+                # capture itself must be guarded too -- confirmed live, it
+                # crashed here on the source immediately following one whose
+                # connection had just dropped.
+                try:
+                    source_ext_id = source.external_id
+                except Exception:
+                    # Genuinely safe fallback -- source_idx is a plain int
+                    # from enumerate(), never touches the (possibly broken)
+                    # ORM object at all.
+                    source_ext_id = f"source_index_{source_idx}"
+
                 try:
                     res = self.collect(source, context={"db": db})
                 except Exception as e:
-                    logger.error(f"Unexpected error collecting RSS source {source.external_id}: {e}")
+                    logger.error(f"Unexpected error collecting RSS source {source_ext_id}: {e}")
                     res = CollectionResult(platform="rss", status="FAILED", error_type="unexpected_error", error_message=str(e))
+                    if isinstance(e, (OperationalError, PendingRollbackError)) and not self.dry_run:
+                        # rollback() alone doesn't reliably recover a hard
+                        # socket-level connection abort (confirmed live --
+                        # it left the session raising PendingRollbackError on
+                        # every subsequent source instead of recovering).
+                        # Discard it and get a genuinely fresh connection so
+                        # the rest of the batch isn't permanently poisoned by
+                        # one transient network blip.
+                        try:
+                            db.close()
+                        except Exception:
+                            pass
+                        db = SessionLocal()
 
-                batch.metadata["results"].append((source.external_id, res))
+                batch.metadata["results"].append((source_ext_id, res))
 
                 if res.status == "SUCCESS":
                     batch.pages_successful += 1
                 else:
                     batch.pages_failed += 1
-                    batch.errors.append({"source": source.external_id, "error_type": res.error_type, "message": res.error_message})
+                    batch.errors.append({"source": source_ext_id, "error_type": res.error_type, "message": res.error_message})
 
                 batch.items_discovered += res.items_discovered
                 batch.items_created += res.items_created

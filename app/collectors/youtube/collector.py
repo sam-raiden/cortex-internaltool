@@ -14,6 +14,7 @@ import os
 import time
 from typing import Dict, List, Optional
 
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 from sqlalchemy.orm import Session
 
 from app.collectors.base import BaseCollector, CollectionBatchResult, CollectionResult
@@ -37,7 +38,16 @@ class YouTubeShortsCollector(BaseCollector):
         own_db = False
         page = context.get("page")
         started = time.time()
-        result = CollectionResult(source_id=getattr(source, "id", None), platform="youtube")
+        try:
+            # See app/collectors/rss/collector.py's identical fix -- a prior
+            # source's db.commit() in this shared batch session expires
+            # every attached ORM object, so this read-only attribute access
+            # can itself trigger a DB query and raise if the connection has
+            # dropped (confirmed live, a real transient failure mode).
+            source_id = source.id
+        except Exception:
+            source_id = None
+        result = CollectionResult(source_id=source_id, platform="youtube")
 
         if page is None:
             result.status, result.error_type, result.error_message = "FAILED", "collector_error", "no browser page in context"
@@ -112,14 +122,29 @@ class YouTubeShortsCollector(BaseCollector):
                     db.close()
 
         except Exception as e:
-            logger.exception(f"Unexpected YouTube collection error for {source.external_id}")
+            # source_id (captured safely above) used instead of
+            # source.external_id -- see app/collectors/rss/collector.py's
+            # identical fix and comment for why touching the ORM object
+            # again inside an exception handler isn't safe here.
+            logger.exception(f"Unexpected YouTube collection error for source_id={source_id}")
             result.status, result.error_type, result.error_message = "FAILED", "collector_error", str(e)
-            # See app/collectors/rss/collector.py's identical fix: a failed
-            # insert/commit leaves a shared, batch-level session in a
-            # PendingRollbackError state that would otherwise cascade into
-            # every subsequent source in the same run_batch().
             if not own_db and db is not None:
-                db.rollback()
+                if isinstance(e, (OperationalError, PendingRollbackError)):
+                    # See app/collectors/rss/collector.py's identical fix --
+                    # rollback() alone doesn't reliably recover a hard
+                    # socket-level connection abort (confirmed live). close()
+                    # lets this same Session transparently check out a fresh
+                    # connection on its next use.
+                    try:
+                        db.close()
+                    except Exception:
+                        pass
+                else:
+                    # A failed insert/commit leaves a shared, batch-level
+                    # session in a PendingRollbackError state that would
+                    # otherwise cascade into every subsequent source in the
+                    # same run_batch().
+                    db.rollback()
 
         return self._finish(result, started)
 
@@ -151,19 +176,40 @@ class YouTubeShortsCollector(BaseCollector):
             with YouTubeBrowser() as browser:
                 for i, source in enumerate(active):
                     batch.pages_attempted += 1
+                    # Plain string, captured before collect() -- see the
+                    # comment in collect() above for why touching the ORM
+                    # object again here isn't safe after a commit + a
+                    # transient connection drop. The capture itself needs
+                    # guarding too (confirmed live on the RSS collector's
+                    # identical pattern) -- fall back to the loop index,
+                    # which never touches the ORM object at all.
+                    try:
+                        source_ext_id = source.external_id
+                    except Exception:
+                        source_ext_id = f"source_index_{i}"
+
                     try:
                         res = self.collect(source, context={"db": db, "page": browser.page})
                     except Exception as e:
-                        logger.error(f"Unexpected error collecting YouTube source {source.external_id}: {e}")
+                        logger.error(f"Unexpected error collecting YouTube source {source_ext_id}: {e}")
                         res = CollectionResult(platform="youtube", status="FAILED", error_type="unexpected_error", error_message=str(e))
+                        if isinstance(e, (OperationalError, PendingRollbackError)) and not self.dry_run:
+                            # See app/collectors/rss/collector.py's identical
+                            # fix -- rollback() alone doesn't reliably
+                            # recover a hard socket-level connection abort.
+                            try:
+                                db.close()
+                            except Exception:
+                                pass
+                            db = SessionLocal()
 
-                    batch.metadata["results"].append((source.external_id, res))
+                    batch.metadata["results"].append((source_ext_id, res))
 
                     if res.status == "SUCCESS":
                         batch.pages_successful += 1
                     else:
                         batch.pages_failed += 1
-                        batch.errors.append({"source": source.external_id, "error_type": res.error_type, "message": res.error_message})
+                        batch.errors.append({"source": source_ext_id, "error_type": res.error_type, "message": res.error_message})
 
                     batch.items_discovered += res.items_discovered
                     batch.items_created += res.items_created

@@ -1,8 +1,10 @@
+import logging
 import os
 import json
 import uuid
 import datetime
 from typing import List, Optional
+from sqlalchemy.exc import OperationalError, PendingRollbackError
 from app.collectors.instagram.collector import InstagramCollector
 from app.collectors.base import CollectionResult as GenericResult, CollectionBatchResult as GenericBatchResult
 from app.storage.database import SessionLocal
@@ -11,6 +13,8 @@ from app.services.collection_run import CollectionRunService
 from app.collectors.instagram.models import CollectionBatchResult
 from app.models.schema import Source
 import pathlib
+
+logger = logging.getLogger(__name__)
 
 
 def _adapt_result(r) -> GenericResult:
@@ -58,10 +62,15 @@ def execute_cycle(vertical_scope: str = "ALL", sources: Optional[List[Source]] =
     db = SessionLocal()
     session_state = "AUTHENTICATED" if auth_loaded else "SESSION_EXPIRED"
     run_db = CollectionRunService.start_run(db, run_id, session_state, vertical_scope)
+    # See app/collectors/rss/run_cycle.py's identical fix/comment --
+    # captured once as a plain int since log_page_result()'s commits expire
+    # run_db on this session, and a later re-read of run_db.id can itself
+    # trigger a DB query that fails on a dropped connection.
+    run_db_id = run_db.id
 
     if not auth_loaded:
         print("SESSION_EXPIRED")
-        CollectionRunService.complete_run(db, run_db.id, _adapt_batch(CollectionBatchResult(status="FAILED")))
+        CollectionRunService.complete_run(db, run_db_id, _adapt_batch(CollectionBatchResult(status="FAILED")))
         db.close()
         return
 
@@ -81,10 +90,34 @@ def execute_cycle(vertical_scope: str = "ALL", sources: Optional[List[Source]] =
 
     # Persist page-results into observability layer
     for r in batch_result.results:
-        CollectionRunService.log_page_result(db, run_db.id, r.page_username, _adapt_result(r))
+        try:
+            CollectionRunService.log_page_result(db, run_db_id, r.page_username, _adapt_result(r))
+        except (OperationalError, PendingRollbackError):
+            # See app/collectors/rss/run_cycle.py's identical fix -- close()
+            # lets this session transparently get a fresh connection on its
+            # next use instead of leaving every remaining page's bookkeeping
+            # call failing on a dropped transaction.
+            logger.warning(f"Connection drop logging page result for {r.page_username}, recovering session")
+            try:
+                db.close()
+            except Exception:
+                pass
+            db = SessionLocal()
 
-    CollectionRunService.complete_run(db, run_db.id, _adapt_batch(batch_result))
-    create_caption_sources(db)
+    try:
+        CollectionRunService.complete_run(db, run_db_id, _adapt_batch(batch_result))
+    except (OperationalError, PendingRollbackError):
+        logger.warning("Connection drop completing run, recovering session")
+        db.close()
+        db = SessionLocal()
+    try:
+        create_caption_sources(db)
+    except (OperationalError, PendingRollbackError):
+        # See app/collectors/rss/run_cycle.py's identical fix.
+        logger.warning("Connection drop during normalization, recovering session and retrying once")
+        db.close()
+        db = SessionLocal()
+        create_caption_sources(db)
     db.close()
             
     # Serialize results API payload
