@@ -188,5 +188,65 @@
     "active": true,
     "vertical": "GENERAL",
     "priority": 1
+  },
+  {
+    "display_name": "@erumasaani (IG)",
+    "username": "erumasaani_ig",
+    "url": "https://www.instagram.com/erumasaani/",
+    "account_type": "comedy",
+    "tier": 1,
+    "active": true,
+    "vertical": "GENERAL",
+    "priority": 1
+  },
+  {
+    "display_name": "@vikatan_emagazine",
+    "username": "vikatan_emagazine",
+    "url": "https://www.instagram.com/vikatan_emagazine/",
+    "account_type": "news, magazine",
+    "tier": 1,
+    "active": true,
+    "vertical": "GENERAL",
+    "priority": 1
+  },
+  {
+    "display_name": "Dr. Siva Sundar",
+    "username": "dr.a.siva_sundar",
+    "url": "https://www.instagram.com/dr.a.siva_sundar/",
+    "account_type": "doctor, diabetologist",
+    "tier": 1,
+    "active": true,
+    "vertical": "MEDICAL",
+    "priority": 1
+  },
+  {
+    "display_name": "Dr. Aravind Duruvasal",
+    "username": "draravindduruvasal",
+    "url": "https://www.instagram.com/draravindduruvasal/",
+    "account_type": "doctor, cardiologist",
+    "tier": 1,
+    "active": true,
+    "vertical": "MEDICAL",
+    "priority": 1
+  },
+  {
+    "display_name": "Dr. Sagul Ramanuja Mugunthan",
+    "username": "dr_sagul.r.mugunthan",
+    "url": "https://www.instagram.com/dr_sagul.r.mugunthan/",
+    "account_type": "doctor, pediatrician",
+    "tier": 1,
+    "active": true,
+    "vertical": "MEDICAL",
+    "priority": 1
+  },
+  {
+    "display_name": "Dr. Priya Kalyani",
+    "username": "drpriyakalyani.official",
+    "url": "https://www.instagram.com/drpriyakalyani.official/",
+    "account_type": "doctor, obstetrics and gynecology",
+    "tier": 1,
+    "active": true,
+    "vertical": "MEDICAL",
+    "priority": 1
   }
 ]
