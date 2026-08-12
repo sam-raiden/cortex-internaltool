@@ -40,7 +40,7 @@ def test_test_cleanup_only_affects_test_db(db_session):
 
 def test_development_database_unchanged():
     # Attempt connecting securely mapping native
-    dev_url = "postgresql://tamilsh:pocpassword@localhost:5433/tamilsh_poc"
+    dev_url = "postgresql://tamilsh:pocpassword@localhost:5432/tamilsh_poc"
     eng = create_engine(dev_url)
     with eng.connect() as conn:
         res = conn.execute(text("SELECT count(*) FROM sources WHERE external_id = 'cleanup_test_user'")).scalar()
